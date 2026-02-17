@@ -2,9 +2,35 @@
 	import '$lib/puzzles';
 	import { getAllPuzzles } from '$lib/engine/registry';
 	import Leaderboard from '$lib/components/Leaderboard.svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 
 	const puzzles = getAllPuzzles();
-	let selectedSlug = $state(puzzles.length > 0 ? puzzles[0].slug : '');
+	const modes = [
+		{ key: 'sprint', label: 'Sprint', icon: '⚡' },
+		{ key: 'marathon', label: 'Marathon', icon: '🏔️' }
+	] as const;
+
+	const tabs = puzzles.flatMap(p =>
+		modes.map(m => ({
+			slug: `${p.slug}-${m.key}`,
+			label: `${p.icon} ${p.name}`,
+			modeLabel: `${m.icon} ${m.label}`
+		}))
+	);
+
+	const tabSlugs = new Set(tabs.map(t => t.slug));
+	const defaultSlug = tabs.length > 0 ? tabs[0].slug : '';
+
+	const selectedSlug = $derived.by(() => {
+		const param = page.url.searchParams.get('puzzle');
+		return param && tabSlugs.has(param) ? param : defaultSlug;
+	});
+
+	function selectTab(slug: string) {
+		goto(`${base}/leaderboard/?puzzle=${slug}`, { replaceState: false, keepFocus: true });
+	}
 </script>
 
 <svelte:head>
@@ -14,19 +40,17 @@
 <div class="leaderboard-page">
 	<h1>Leaderboard</h1>
 
-	{#if puzzles.length > 1}
-		<div class="puzzle-tabs">
-			{#each puzzles as puzzle}
-				<button
-					class="tab"
-					class:active={selectedSlug === puzzle.slug}
-					onclick={() => selectedSlug = puzzle.slug}
-				>
-					{puzzle.icon} {puzzle.name}
-				</button>
-			{/each}
-		</div>
-	{/if}
+	<div class="puzzle-tabs">
+		{#each tabs as tab}
+			<button
+				class="tab"
+				class:active={selectedSlug === tab.slug}
+				onclick={() => selectTab(tab.slug)}
+			>
+				{tab.label} {tab.modeLabel}
+			</button>
+		{/each}
+	</div>
 
 	<div class="leaderboard-container card">
 		{#key selectedSlug}

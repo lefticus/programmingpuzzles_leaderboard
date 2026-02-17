@@ -13,13 +13,13 @@ function timerDuration(bits: number): number {
 	return 120;
 }
 
-export const binaryDecimalPlugin: PuzzlePlugin = {
-	slug: 'binary-decimal',
-	name: 'Binary ↔ Decimal',
-	description: 'Convert between binary and decimal numbers. Difficulty scales from 1-bit to 64-bit.',
-	icon: '🔢',
+export const hexDecimalPlugin: PuzzlePlugin = {
+	slug: 'hex-decimal',
+	name: 'Hex ↔ Decimal',
+	description: 'Convert between hexadecimal and decimal numbers.',
+	icon: '🧮',
 	component: ConversionPuzzle,
-	minDifficulty: 1,
+	minDifficulty: 4,
 	maxDifficulty: 64,
 
 	difficultyLabel(level: number): string {
@@ -31,7 +31,7 @@ export const binaryDecimalPlugin: PuzzlePlugin = {
 	},
 
 	generateRound(difficulty: number, seen: Set<string>) {
-		return generateConversionRound(difficulty, seen, 'binary', 'decimal');
+		return generateConversionRound(difficulty, seen, 'hex', 'decimal');
 	},
 
 	scoreForSolve(difficulty: number, timeRemaining: number, timerDur: number): number {

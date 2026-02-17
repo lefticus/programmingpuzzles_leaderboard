@@ -38,7 +38,7 @@
 </script>
 
 <div class="leaderboard">
-	<h3>Leaderboard {puzzleSlug ? `— ${puzzleSlug}` : ''}</h3>
+	<h3>Leaderboard</h3>
 
 	{#if loading}
 		<p class="loading-text">Loading...</p>

@@ -4,23 +4,22 @@ import { generateConversionRound } from '$lib/puzzles/shared';
 import ConversionPuzzle from '$lib/components/ConversionPuzzle.svelte';
 
 function timerDuration(bits: number): number {
-	if (bits <= 4) return 10;
-	if (bits <= 8) return 15;
-	if (bits <= 16) return 25;
-	if (bits <= 24) return 40;
-	if (bits <= 32) return 60;
-	if (bits <= 48) return 90;
-	return 120;
+	if (bits <= 6) return 10;
+	if (bits <= 12) return 15;
+	if (bits <= 24) return 25;
+	if (bits <= 36) return 40;
+	if (bits <= 48) return 60;
+	return 90;
 }
 
-export const binaryDecimalPlugin: PuzzlePlugin = {
-	slug: 'binary-decimal',
-	name: 'Binary ↔ Decimal',
-	description: 'Convert between binary and decimal numbers. Difficulty scales from 1-bit to 64-bit.',
-	icon: '🔢',
+export const binaryOctalPlugin: PuzzlePlugin = {
+	slug: 'binary-octal',
+	name: 'Binary ↔ Octal',
+	description: 'Convert between binary and octal. Each octal digit is 3 bits.',
+	icon: '🎱',
 	component: ConversionPuzzle,
-	minDifficulty: 1,
-	maxDifficulty: 64,
+	minDifficulty: 3,
+	maxDifficulty: 63,
 
 	difficultyLabel(level: number): string {
 		return `${level}-bit`;
@@ -31,7 +30,7 @@ export const binaryDecimalPlugin: PuzzlePlugin = {
 	},
 
 	generateRound(difficulty: number, seen: Set<string>) {
-		return generateConversionRound(difficulty, seen, 'binary', 'decimal');
+		return generateConversionRound(difficulty, seen, 'binary', 'octal');
 	},
 
 	scoreForSolve(difficulty: number, timeRemaining: number, timerDur: number): number {

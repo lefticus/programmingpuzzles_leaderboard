@@ -1,14 +1,30 @@
 <script lang="ts">
 	import type { GameState } from '$lib/engine/game-state.svelte';
-	import { formatBinary } from './generator';
+	import type { NumberBase } from '$lib/engine/types';
+	import { formatForBase } from '$lib/puzzles/shared';
 
 	let { gameState }: { gameState: GameState } = $props();
 	let userAnswer = $state('');
 	let inputEl = $state<HTMLInputElement | null>(null);
 
 	const round = $derived(gameState.currentRound);
-	const isBinToDec = $derived(round?.prompt.startsWith('Convert to decimal'));
+	const answerType = $derived<NumberBase>(round?.answerType ?? 'decimal');
 	const displayValue = $derived(round?.displayPrompt ?? '');
+	const promptLabel = $derived(round?.promptLabel ?? '');
+
+	const inputFilter: Record<NumberBase, RegExp> = {
+		binary: /[^01\s]/g,
+		octal: /[^0-7]/g,
+		decimal: /[^0-9]/g,
+		hex: /[^0-9a-fA-F]/g
+	};
+
+	const placeholders: Record<NumberBase, string> = {
+		binary: 'Enter binary (0s and 1s)...',
+		octal: 'Enter octal (0-7)...',
+		decimal: 'Enter decimal (0-9)...',
+		hex: 'Enter hex (0-9, A-F)...'
+	};
 
 	$effect(() => {
 		if (gameState.phase === 'playing') {
@@ -17,41 +33,48 @@
 		}
 	});
 
+	function handleInput() {
+		userAnswer = userAnswer.replace(inputFilter[answerType], '');
+	}
+
 	function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (gameState.phase !== 'playing' || !userAnswer.trim()) return;
 
-		let normalizedAnswer = userAnswer.trim();
-		if (!isBinToDec) {
-			normalizedAnswer = normalizedAnswer.replace(/\s+/g, '');
-			// Pad to expected length
-			const expectedLen = round!.answer.length;
-			normalizedAnswer = normalizedAnswer.padStart(expectedLen, '0');
+		let normalized = userAnswer.trim().replace(/\s+/g, '');
+
+		if (answerType === 'binary') {
+			normalized = normalized.padStart(round!.answer.length, '0');
+		} else if (answerType === 'hex') {
+			normalized = normalized.toUpperCase().padStart(round!.answer.length, '0');
 		}
 
-		gameState.submitAnswer(normalizedAnswer);
+		gameState.submitAnswer(normalized);
 	}
 
 	function formatExpectedDisplay(answer: string): string {
-		if (isBinToDec) return answer;
-		const bits = answer.length;
-		return formatBinary(BigInt('0b' + answer), bits);
+		if (answerType === 'binary') {
+			const bits = answer.length;
+			return formatForBase(BigInt('0b' + answer), 'binary', bits);
+		}
+		if (answerType === 'hex') {
+			return '0x' + answer;
+		}
+		if (answerType === 'octal') {
+			return '0o' + answer;
+		}
+		return answer;
 	}
 </script>
 
-<div class="binary-decimal">
+<div class="conversion-puzzle">
 	<div class="difficulty-badge">
 		{gameState.plugin.difficultyLabel(gameState.difficulty)}
 	</div>
 
 	<div class="prompt-area">
-		{#if isBinToDec}
-			<div class="label">Convert to decimal</div>
-			<div class="binary-display mono">{displayValue}</div>
-		{:else}
-			<div class="label">Convert to {round?.answer.length}-bit binary</div>
-			<div class="decimal-display mono">{displayValue}</div>
-		{/if}
+		<div class="label">{promptLabel}</div>
+		<div class="display-value mono">{displayValue}</div>
 	</div>
 
 	{#if gameState.phase === 'playing'}
@@ -59,9 +82,10 @@
 			<input
 				bind:this={inputEl}
 				bind:value={userAnswer}
+				oninput={handleInput}
 				class="answer-input mono"
 				type="text"
-				placeholder={isBinToDec ? 'Enter decimal...' : 'Enter binary...'}
+				placeholder={placeholders[answerType]}
 				autocomplete="off"
 				autofocus
 			/>
@@ -89,7 +113,7 @@
 </div>
 
 <style>
-	.binary-decimal {
+	.conversion-puzzle {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -117,18 +141,12 @@
 		font-weight: 500;
 	}
 
-	.binary-display {
+	.display-value {
 		font-size: 2rem;
 		font-weight: 700;
 		color: var(--accent);
-		letter-spacing: 0.15em;
+		letter-spacing: 0.1em;
 		word-spacing: 0.3em;
-	}
-
-	.decimal-display {
-		font-size: 2.5rem;
-		font-weight: 700;
-		color: var(--accent);
 	}
 
 	.answer-form {

@@ -8,10 +8,14 @@ export interface RoundStats {
 	roundsPlayed: number;
 }
 
+export type NumberBase = 'binary' | 'octal' | 'decimal' | 'hex';
+
 export interface PuzzleRound {
 	prompt: string;
 	answer: string;
 	displayPrompt?: string;
+	answerType?: NumberBase;
+	promptLabel?: string;
 }
 
 export interface PuzzlePlugin {
