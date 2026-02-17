@@ -13,8 +13,8 @@
 
 	let { plugin }: { plugin: PuzzlePlugin } = $props();
 
-	const gameState = new GameState(plugin);
-	const refVariant = plugin.slug.includes('ascii') ? 'ascii' : 'numeric' as const;
+	const gameState = new GameState(() => plugin);
+	const refVariant = $derived(plugin.slug.includes('ascii') ? 'ascii' : 'numeric' as const);
 	let submitting = $state(false);
 	let submitted = $state(false);
 	let submitError = $state('');
@@ -78,7 +78,7 @@
 		gameState.startGame(mode);
 	}
 
-	const PuzzleComponent = plugin.component;
+	const PuzzleComponent = $derived(plugin.component);
 </script>
 
 <div class="game-shell">

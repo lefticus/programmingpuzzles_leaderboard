@@ -1,4 +1,6 @@
-import type { PuzzleRound, NumberBase } from '$lib/engine/types';
+import type { PuzzlePlugin, PuzzleRound, RoundStats, NumberBase } from '$lib/engine/types';
+import { calculateScore } from '$lib/engine/scoring';
+import ConversionPuzzle from '$lib/components/ConversionPuzzle.svelte';
 
 function randomBigIntInRange(min: bigint, max: bigint): bigint {
 	const range = max - min + 1n;
@@ -259,4 +261,55 @@ export function generateAsciiConversionRound(
 			promptLabel: `Convert to ${baseLabels.ascii}`
 		};
 	}
+}
+
+// --- Timer presets ---
+
+export const timerStandard: [number, number][] = [[4, 10], [8, 15], [16, 25], [24, 40], [32, 60], [48, 90]];
+export const timerHexBinary: [number, number][] = [[8, 10], [16, 15], [32, 25], [48, 40]];
+export const timerOctal: [number, number][] = [[6, 10], [12, 15], [24, 25], [36, 40], [48, 60]];
+export const timerAscii: [number, number][] = [[2, 10], [4, 15], [6, 25]];
+
+function timerFromConfig(value: number, config: [number, number][], fallback: number): number {
+	for (const [threshold, duration] of config) {
+		if (value <= threshold) return duration;
+	}
+	return fallback;
+}
+
+// --- Difficulty label helpers ---
+
+export const bitLabel = (level: number): string => `${level}-bit`;
+export const charLabel = (level: number): string => `${level} char${level === 1 ? '' : 's'}`;
+
+// --- Plugin factory ---
+
+interface ConversionPluginConfig {
+	slug: string;
+	name: string;
+	description: string;
+	minDifficulty: number;
+	maxDifficulty: number;
+	difficultyLabel: (level: number) => string;
+	timerConfig: [number, number][];
+	timerFallback: number;
+	generateRound: (difficulty: number, seen: Set<string>) => PuzzleRound;
+}
+
+export function createConversionPlugin(config: ConversionPluginConfig): PuzzlePlugin {
+	return {
+		slug: config.slug,
+		name: config.name,
+		description: config.description,
+		icon: '',
+		component: ConversionPuzzle,
+		minDifficulty: config.minDifficulty,
+		maxDifficulty: config.maxDifficulty,
+		difficultyLabel: config.difficultyLabel,
+		timerDuration: (d: number) => timerFromConfig(d, config.timerConfig, config.timerFallback),
+		generateRound: config.generateRound,
+		scoreForSolve: calculateScore,
+		shouldAdvance: (stats: RoundStats) => stats.consecutiveCorrect >= 3,
+		shouldRegress: (stats: RoundStats) => stats.consecutiveWrong >= 2
+	};
 }

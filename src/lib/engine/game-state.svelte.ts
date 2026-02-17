@@ -20,12 +20,13 @@ export class GameState {
 	scoreMultiplier = $derived(this.referenceVisible ? 1 : 2);
 
 	timer = new CountdownTimer();
-	plugin: PuzzlePlugin;
+	private getPlugin: () => PuzzlePlugin;
+	get plugin() { return this.getPlugin(); }
 	seen = new Set<string>();
 
-	constructor(plugin: PuzzlePlugin) {
-		this.plugin = plugin;
-		this.difficulty = plugin.minDifficulty;
+	constructor(getPlugin: () => PuzzlePlugin) {
+		this.getPlugin = getPlugin;
+		this.difficulty = this.plugin.minDifficulty;
 	}
 
 	startGame(mode: GameMode) {

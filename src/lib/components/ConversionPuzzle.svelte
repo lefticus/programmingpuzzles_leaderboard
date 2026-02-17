@@ -81,7 +81,6 @@
 					class="answer-input mono"
 					type="text"
 					autocomplete="off"
-					autofocus
 				/>
 			</div>
 			<button type="submit" class="btn btn-primary">Submit</button>
