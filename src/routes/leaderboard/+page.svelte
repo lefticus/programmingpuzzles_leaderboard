@@ -8,16 +8,16 @@
 
 	const puzzles = getAllPuzzles();
 	const modes = [
-		{ key: 'sprint', label: 'Sprint', icon: '⚡' },
-		{ key: 'marathon', label: 'Marathon', icon: '🏔️' },
-		{ key: 'untimed', label: 'Untimed', icon: '🧘' }
+		{ key: 'sprint', label: 'Sprint' },
+		{ key: 'marathon', label: 'Marathon' },
+		{ key: 'untimed', label: 'Untimed' }
 	] as const;
 
 	const tabs = puzzles.flatMap(p =>
 		modes.map(m => ({
 			slug: `${p.slug}-${m.key}`,
-			label: `${p.icon} ${p.name}`,
-			modeLabel: `${m.icon} ${m.label}`
+			label: p.name,
+			modeLabel: m.label
 		}))
 	);
 

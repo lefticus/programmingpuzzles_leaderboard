@@ -1,9 +1,47 @@
 <script lang="ts">
 	import '$lib/puzzles';
-	import { getAllPuzzles } from '$lib/engine/registry';
-	import PuzzleCard from '$lib/components/PuzzleCard.svelte';
+	import { getPuzzle } from '$lib/engine/registry';
+	import { base } from '$app/paths';
 
-	const puzzles = getAllPuzzles();
+	const bases = ['binary', 'octal', 'decimal', 'hex'] as const;
+	const labels: Record<string, string> = {
+		binary: 'BIN',
+		octal: 'OCT',
+		decimal: 'DEC',
+		hex: 'HEX'
+	};
+	const icons: Record<string, string> = {
+		binary: '0b',
+		octal: '0o',
+		decimal: '10',
+		hex: '0x'
+	};
+
+	// Map each pair of bases to a puzzle slug
+	const slugMap: Record<string, string> = {
+		'binary-decimal': 'binary-decimal',
+		'decimal-binary': 'binary-decimal',
+		'binary-octal': 'binary-octal',
+		'octal-binary': 'binary-octal',
+		'binary-hex': 'hex-binary',
+		'hex-binary': 'hex-binary',
+		'octal-decimal': 'octal-decimal',
+		'decimal-octal': 'octal-decimal',
+		'octal-hex': 'octal-hex',
+		'hex-octal': 'octal-hex',
+		'decimal-hex': 'hex-decimal',
+		'hex-decimal': 'hex-decimal'
+	};
+
+	function getSlug(from: string, to: string): string | null {
+		if (from === to) return null;
+		return slugMap[`${from}-${to}`] ?? null;
+	}
+
+	function getPlugin(from: string, to: string) {
+		const slug = getSlug(from, to);
+		return slug ? getPuzzle(slug) : undefined;
+	}
 </script>
 
 <svelte:head>
@@ -12,9 +50,39 @@
 
 <div class="puzzles-page">
 	<h1>Choose a Puzzle</h1>
-	<div class="puzzle-grid">
-		{#each puzzles as plugin}
-			<PuzzleCard {plugin} />
+	<p class="subtitle">Pick two number systems to convert between</p>
+
+	<div class="grid-wrapper">
+		<!-- Column headers -->
+		<div class="corner">
+			<span class="corner-from">FROM</span>
+			<span class="corner-to">TO</span>
+			<div class="corner-line"></div>
+		</div>
+		{#each bases as colBase}
+			<div class="col-header">
+				<span class="header-icon mono">{icons[colBase]}</span>
+				<span class="header-label">{labels[colBase]}</span>
+			</div>
+		{/each}
+
+		<!-- Rows -->
+		{#each bases as rowBase}
+			<div class="row-header">
+				<span class="header-icon mono">{icons[rowBase]}</span>
+				<span class="header-label">{labels[rowBase]}</span>
+			</div>
+			{#each bases as colBase}
+				{@const slug = getSlug(rowBase, colBase)}
+				{@const plugin = getPlugin(rowBase, colBase)}
+				{#if slug && plugin}
+					<a href="{base}/puzzles/{slug}/" class="grid-cell">
+						<span class="cell-arrow">{labels[rowBase]} ↔ {labels[colBase]}</span>
+					</a>
+				{:else}
+					<div class="grid-cell disabled"></div>
+				{/if}
+			{/each}
 		{/each}
 	</div>
 </div>
@@ -22,17 +90,131 @@
 <style>
 	.puzzles-page {
 		text-align: center;
+		max-width: 550px;
+		margin: 0 auto;
 	}
 
 	.puzzles-page h1 {
+		margin-bottom: 0.5rem;
+	}
+
+	.subtitle {
+		color: var(--text-muted);
+		font-size: 0.95rem;
 		margin-bottom: 2rem;
 	}
 
-	.puzzle-grid {
+	.grid-wrapper {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 1.5rem;
-		max-width: 900px;
-		margin: 0 auto;
+		grid-template-columns: auto repeat(4, 1fr);
+		grid-template-rows: auto repeat(4, 1fr);
+		gap: 6px;
+	}
+
+	/* Corner cell with diagonal FROM/TO */
+	.corner {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		min-width: 70px;
+		min-height: 70px;
+	}
+
+	.corner-from {
+		position: absolute;
+		bottom: 6px;
+		left: 6px;
+		font-size: 0.6rem;
+		font-weight: 700;
+		color: var(--text-dim);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.corner-to {
+		position: absolute;
+		top: 6px;
+		right: 8px;
+		font-size: 0.6rem;
+		font-weight: 700;
+		color: var(--text-dim);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.corner-line {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 141%;
+		height: 1px;
+		background: var(--border);
+		transform-origin: top left;
+		transform: rotate(45deg);
+	}
+
+	/* Headers */
+	.col-header, .row-header {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.15rem;
+		padding: 0.5rem;
+	}
+
+	.header-icon {
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--accent);
+	}
+
+	.header-label {
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: var(--text-muted);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	/* Grid cells */
+	.grid-cell {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--bg-surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		min-height: 70px;
+		text-decoration: none;
+		color: var(--text);
+		transition: all 0.15s;
+	}
+
+	.grid-cell:hover:not(.disabled) {
+		border-color: var(--accent);
+		background: var(--bg-elevated);
+		transform: scale(1.05);
+		text-decoration: none;
+	}
+
+	.grid-cell.disabled {
+		background: transparent;
+		border-color: transparent;
+		cursor: default;
+	}
+
+	.cell-arrow {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text-muted);
+		letter-spacing: 0.02em;
+	}
+
+	.grid-cell:hover:not(.disabled) .cell-arrow {
+		color: var(--accent);
 	}
 </style>

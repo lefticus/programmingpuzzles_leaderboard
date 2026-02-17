@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700;900&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 :root {
 	--bg: #0a0e17;
@@ -13,8 +13,8 @@
 	--success: #34d399;
 	--error: #f87171;
 	--warning: #fbbf24;
-	--font-mono: 'JetBrains Mono', monospace;
-	--font-sans: 'Inter', system-ui, sans-serif;
+	--font-mono: 'Source Code Pro', monospace;
+	--font-sans: 'Source Sans 3', system-ui, sans-serif;
 	--radius: 8px;
 	--radius-lg: 12px;
 }

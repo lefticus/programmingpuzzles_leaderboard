@@ -28,9 +28,9 @@
 	);
 
 	const modeLabels: Record<GameMode, string> = {
-		sprint: '⚡ Sprint',
-		marathon: '🏔️ Marathon',
-		untimed: '🧘 Untimed'
+		sprint: 'Sprint',
+		marathon: 'Marathon',
+		untimed: 'Untimed'
 	};
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -82,7 +82,7 @@
 
 <div class="game-shell">
 	<div class="game-header">
-		<h2>{plugin.icon} {plugin.name}</h2>
+		<h2>{plugin.name}</h2>
 	</div>
 
 	{#if gameState.phase === 'ready'}
@@ -90,17 +90,14 @@
 			<p>{plugin.description}</p>
 			<div class="mode-picker">
 				<button class="mode-card card" onclick={() => startWithMode('sprint')}>
-					<div class="mode-icon">⚡</div>
 					<div class="mode-name">Sprint</div>
 					<div class="mode-desc">3 wrong in a row and you're out. High risk, high reward.</div>
 				</button>
 				<button class="mode-card card" onclick={() => startWithMode('marathon')}>
-					<div class="mode-icon">🏔️</div>
 					<div class="mode-name">Marathon</div>
 					<div class="mode-desc">No game over. Wrong answers deduct points. End when you want.</div>
 				</button>
 				<button class="mode-card card" onclick={() => startWithMode('untimed')}>
-					<div class="mode-icon">🧘</div>
 					<div class="mode-name">Untimed</div>
 					<div class="mode-desc">No timer, no penalty. Practice at your own pace.</div>
 				</button>
@@ -116,7 +113,7 @@
 					onclick={() => gameState.toggleReference()}
 					disabled={!canToggleRef}
 				>
-					{gameState.referenceVisible ? '📖 Hide Table' : '📖 Show Table'}
+					{gameState.referenceVisible ? 'Hide Table' : 'Show Table'}
 					<span class="multiplier-hint">
 						{gameState.referenceVisible ? '(1x)' : '(2x)'}
 					</span>
@@ -255,11 +252,6 @@
 	.mode-card:hover {
 		border-color: var(--accent);
 		transform: translateY(-2px);
-	}
-
-	.mode-icon {
-		font-size: 2rem;
-		margin-bottom: 0.5rem;
 	}
 
 	.mode-name {

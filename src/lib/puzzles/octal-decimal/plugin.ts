@@ -16,7 +16,7 @@ export const octalDecimalPlugin: PuzzlePlugin = {
 	slug: 'octal-decimal',
 	name: 'Octal ↔ Decimal',
 	description: 'Convert between octal and decimal numbers.',
-	icon: '🔣',
+	icon: '',
 	component: ConversionPuzzle,
 	minDifficulty: 3,
 	maxDifficulty: 63,

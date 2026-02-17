@@ -15,7 +15,7 @@ export const hexBinaryPlugin: PuzzlePlugin = {
 	slug: 'hex-binary',
 	name: 'Hex ↔ Binary',
 	description: 'Convert between hexadecimal and binary. Each hex digit is one nibble.',
-	icon: '🔀',
+	icon: '',
 	component: ConversionPuzzle,
 	minDifficulty: 4,
 	maxDifficulty: 64,

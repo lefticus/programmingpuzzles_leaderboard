@@ -16,7 +16,7 @@ export const binaryOctalPlugin: PuzzlePlugin = {
 	slug: 'binary-octal',
 	name: 'Binary ↔ Octal',
 	description: 'Convert between binary and octal. Each octal digit is 3 bits.',
-	icon: '🎱',
+	icon: '',
 	component: ConversionPuzzle,
 	minDifficulty: 3,
 	maxDifficulty: 63,

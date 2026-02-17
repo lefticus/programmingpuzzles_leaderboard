@@ -15,7 +15,7 @@ export const octalHexPlugin: PuzzlePlugin = {
 	slug: 'octal-hex',
 	name: 'Octal ↔ Hex',
 	description: 'Convert between octal and hexadecimal. Requires thinking across groupings (3-bit vs 4-bit).',
-	icon: '🔄',
+	icon: '',
 	component: ConversionPuzzle,
 	minDifficulty: 4,
 	maxDifficulty: 64,

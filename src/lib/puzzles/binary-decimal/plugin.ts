@@ -17,7 +17,7 @@ export const binaryDecimalPlugin: PuzzlePlugin = {
 	slug: 'binary-decimal',
 	name: 'Binary ↔ Decimal',
 	description: 'Convert between binary and decimal numbers. Difficulty scales from 1-bit to 64-bit.',
-	icon: '🔢',
+	icon: '',
 	component: ConversionPuzzle,
 	minDifficulty: 1,
 	maxDifficulty: 64,

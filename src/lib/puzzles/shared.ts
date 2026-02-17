@@ -54,7 +54,7 @@ export function formatBinary(n: bigint, bits: number): string {
 	for (let i = raw.length; i > 0; i -= 4) {
 		nibbles.unshift(raw.slice(Math.max(0, i - 4), i));
 	}
-	return nibbles.join(' ');
+	return '0b ' + nibbles.join(' ');
 }
 
 export function formatOctal(n: bigint): string {

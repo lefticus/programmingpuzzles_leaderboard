@@ -6,7 +6,6 @@
 </script>
 
 <a href="{base}/puzzles/{plugin.slug}/" class="puzzle-card card">
-	<div class="card-icon">{plugin.icon}</div>
 	<h3>{plugin.name}</h3>
 	<p>{plugin.description}</p>
 	<div class="card-meta">
@@ -27,11 +26,6 @@
 		border-color: var(--accent);
 		transform: translateY(-2px);
 		text-decoration: none;
-	}
-
-	.card-icon {
-		font-size: 2.5rem;
-		margin-bottom: 0.75rem;
 	}
 
 	.puzzle-card h3 {

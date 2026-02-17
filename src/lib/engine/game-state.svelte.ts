@@ -68,7 +68,8 @@ export class GameState {
 		this.timer.stop();
 		this.roundsPlayed++;
 
-		const correct = answer.trim() === this.currentRound!.answer;
+		const normalize = (s: string) => s.replace(/^0+(?=.)/, '').toUpperCase();
+		const correct = normalize(answer.trim()) === normalize(this.currentRound!.answer);
 		this.lastAnswerCorrect = correct;
 
 		if (correct) {

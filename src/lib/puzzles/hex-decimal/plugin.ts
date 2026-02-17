@@ -17,7 +17,7 @@ export const hexDecimalPlugin: PuzzlePlugin = {
 	slug: 'hex-decimal',
 	name: 'Hex ↔ Decimal',
 	description: 'Convert between hexadecimal and decimal numbers.',
-	icon: '🧮',
+	icon: '',
 	component: ConversionPuzzle,
 	minDifficulty: 4,
 	maxDifficulty: 64,

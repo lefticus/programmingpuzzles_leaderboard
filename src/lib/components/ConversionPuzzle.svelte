@@ -19,11 +19,11 @@
 		hex: /[^0-9a-fA-F]/g
 	};
 
-	const placeholders: Record<NumberBase, string> = {
-		binary: 'Enter binary (0s and 1s)...',
-		octal: 'Enter octal (0-7)...',
-		decimal: 'Enter decimal (0-9)...',
-		hex: 'Enter hex (0-9, A-F)...'
+	const prefixes: Record<NumberBase, string> = {
+		binary: '0b',
+		octal: '0o',
+		decimal: '',
+		hex: '0x'
 	};
 
 	$effect(() => {
@@ -40,30 +40,15 @@
 	function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (gameState.phase !== 'playing' || !userAnswer.trim()) return;
-
-		let normalized = userAnswer.trim().replace(/\s+/g, '');
-
-		if (answerType === 'binary') {
-			normalized = normalized.padStart(round!.answer.length, '0');
-		} else if (answerType === 'hex') {
-			normalized = normalized.toUpperCase().padStart(round!.answer.length, '0');
-		}
-
-		gameState.submitAnswer(normalized);
+		gameState.submitAnswer(userAnswer.trim().replace(/\s+/g, ''));
 	}
 
 	function formatExpectedDisplay(answer: string): string {
+		const bits = answer.length;
 		if (answerType === 'binary') {
-			const bits = answer.length;
 			return formatForBase(BigInt('0b' + answer), 'binary', bits);
 		}
-		if (answerType === 'hex') {
-			return '0x' + answer;
-		}
-		if (answerType === 'octal') {
-			return '0o' + answer;
-		}
-		return answer;
+		return formatForBase(BigInt(answerType === 'hex' ? '0x' + answer : answerType === 'octal' ? '0o' + answer : answer), answerType, bits);
 	}
 </script>
 
@@ -79,16 +64,20 @@
 
 	{#if gameState.phase === 'playing'}
 		<form class="answer-form" onsubmit={handleSubmit}>
-			<input
-				bind:this={inputEl}
-				bind:value={userAnswer}
-				oninput={handleInput}
-				class="answer-input mono"
-				type="text"
-				placeholder={placeholders[answerType]}
-				autocomplete="off"
-				autofocus
-			/>
+			<div class="input-wrapper">
+				{#if prefixes[answerType]}
+					<span class="input-prefix mono">{prefixes[answerType]}</span>
+				{/if}
+				<input
+					bind:this={inputEl}
+					bind:value={userAnswer}
+					oninput={handleInput}
+					class="answer-input mono"
+					type="text"
+					autocomplete="off"
+					autofocus
+				/>
+			</div>
 			<button type="submit" class="btn btn-primary">Submit</button>
 		</form>
 	{/if}
@@ -156,20 +145,38 @@
 		max-width: 500px;
 	}
 
-	.answer-input {
+	.input-wrapper {
 		flex: 1;
-		padding: 0.7rem 1rem;
+		display: flex;
+		align-items: center;
 		background: var(--bg);
 		border: 2px solid var(--border);
 		border-radius: var(--radius);
+		transition: border-color 0.15s;
+	}
+
+	.input-wrapper:focus-within {
+		border-color: var(--accent);
+	}
+
+	.input-prefix {
+		padding-left: 1rem;
 		font-size: 1.2rem;
-		text-align: center;
+		font-weight: 700;
+		color: var(--text-dim);
+		user-select: none;
+		flex-shrink: 0;
+	}
+
+	.answer-input {
+		flex: 1;
+		padding: 0.7rem 1rem;
+		font-size: 1.2rem;
 		letter-spacing: 0.1em;
 	}
 
 	.answer-input:focus {
 		outline: none;
-		border-color: var(--accent);
 	}
 
 	.result {
