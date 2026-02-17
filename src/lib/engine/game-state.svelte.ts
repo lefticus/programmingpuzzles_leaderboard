@@ -1,4 +1,4 @@
-import type { GamePhase, GameMode, PuzzlePlugin, PuzzleRound, RoundStats } from './types';
+import type { GamePhase, GameMode, PuzzlePlugin, PuzzleRound, RoundStats, ScoreBreakdown } from './types';
 import { CountdownTimer } from './timer.svelte';
 
 export class GameState {
@@ -15,6 +15,9 @@ export class GameState {
 	currentRound = $state<PuzzleRound | null>(null);
 	lastAnswerCorrect = $state<boolean | null>(null);
 	lastScore = $state(0);
+	lastBreakdown = $state<ScoreBreakdown | null>(null);
+	referenceVisible = $state(false);
+	scoreMultiplier = $derived(this.referenceVisible ? 1 : 2);
 
 	timer = new CountdownTimer();
 	plugin: PuzzlePlugin;
@@ -43,9 +46,21 @@ export class GameState {
 		this.currentRound = this.plugin.generateRound(this.difficulty, this.seen);
 		this.lastAnswerCorrect = null;
 		this.lastScore = 0;
+		this.lastBreakdown = null;
 		this.phase = 'playing';
-		const duration = this.plugin.timerDuration(this.difficulty);
-		this.timer.start(duration, () => this.handleTimeout());
+
+		if (this.mode === 'untimed') {
+			// No timer in untimed mode
+		} else {
+			const duration = this.plugin.timerDuration(this.difficulty);
+			this.timer.start(duration, () => this.handleTimeout());
+		}
+	}
+
+	toggleReference() {
+		if (this.phase === 'playing' || this.phase === 'answered') {
+			this.referenceVisible = !this.referenceVisible;
+		}
 	}
 
 	submitAnswer(answer: string) {
@@ -57,13 +72,23 @@ export class GameState {
 		this.lastAnswerCorrect = correct;
 
 		if (correct) {
-			const points = this.plugin.scoreForSolve(
-				this.difficulty,
-				this.timer.remaining,
-				this.timer.duration
-			);
-			this.lastScore = points;
-			this.score += points;
+			const basePoints = Math.floor(Math.pow(this.difficulty, 1.5) * 5);
+			const timeRemaining = this.mode !== 'untimed' ? this.timer.remaining : 0;
+			const timeBonus = this.mode !== 'untimed' ? Math.floor(timeRemaining) : 0;
+			const preMultiplier = basePoints + timeBonus;
+			const total = preMultiplier * this.scoreMultiplier;
+			this.lastBreakdown = {
+				correct: true,
+				basePoints,
+				timeBonus,
+				timeRemaining,
+				multiplier: this.scoreMultiplier,
+				total,
+				difficulty: this.difficulty,
+				difficultyLabel: this.plugin.difficultyLabel(this.difficulty)
+			};
+			this.lastScore = total;
+			this.score += total;
 			this.consecutiveCorrect++;
 			this.consecutiveWrong = 0;
 			this.totalCorrect++;
@@ -98,15 +123,35 @@ export class GameState {
 
 		if (this.mode === 'sprint') {
 			this.lastScore = 0;
+			this.lastBreakdown = {
+				correct: false, basePoints: 0, timeBonus: 0, timeRemaining: 0,
+				multiplier: this.scoreMultiplier, total: 0,
+				difficulty: this.difficulty,
+				difficultyLabel: this.plugin.difficultyLabel(this.difficulty)
+			};
 			if (this.consecutiveWrong >= 3) {
 				setTimeout(() => this.endGame(), 1500);
 				return;
 			}
-		} else {
-			// Marathon: deduct half the points you would have earned at full time
-			const penalty = Math.floor(Math.pow(this.difficulty, 1.5) * 5);
+		} else if (this.mode === 'marathon') {
+			const penalty = Math.floor(Math.pow(this.difficulty, 1.5) * 5) * this.scoreMultiplier;
 			this.lastScore = -penalty;
 			this.score -= penalty;
+			this.lastBreakdown = {
+				correct: false, basePoints: -penalty, timeBonus: 0, timeRemaining: 0,
+				multiplier: 1, total: -penalty,
+				difficulty: this.difficulty,
+				difficultyLabel: this.plugin.difficultyLabel(this.difficulty)
+			};
+		} else {
+			// Untimed: wrong answers score 0, no penalty
+			this.lastScore = 0;
+			this.lastBreakdown = {
+				correct: false, basePoints: 0, timeBonus: 0, timeRemaining: 0,
+				multiplier: this.scoreMultiplier, total: 0,
+				difficulty: this.difficulty,
+				difficultyLabel: this.plugin.difficultyLabel(this.difficulty)
+			};
 		}
 
 		if (this.difficulty > this.plugin.minDifficulty) {

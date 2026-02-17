@@ -6,6 +6,8 @@
 	import Timer from './Timer.svelte';
 	import ScoreDisplay from './ScoreDisplay.svelte';
 	import Leaderboard from './Leaderboard.svelte';
+	import ReferenceTable from './ReferenceTable.svelte';
+	import ScoreAnimation from './ScoreAnimation.svelte';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 
@@ -20,6 +22,16 @@
 		gameState.phase === 'answered' &&
 		!(gameState.mode === 'sprint' && gameState.consecutiveWrong >= 3)
 	);
+
+	const canToggleRef = $derived(
+		gameState.phase !== 'done' && gameState.phase !== 'ready'
+	);
+
+	const modeLabels: Record<GameMode, string> = {
+		sprint: '⚡ Sprint',
+		marathon: '🏔️ Marathon',
+		untimed: '🧘 Untimed'
+	};
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && canAdvance) {
@@ -87,15 +99,43 @@
 					<div class="mode-name">Marathon</div>
 					<div class="mode-desc">No game over. Wrong answers deduct points. End when you want.</div>
 				</button>
+				<button class="mode-card card" onclick={() => startWithMode('untimed')}>
+					<div class="mode-icon">🧘</div>
+					<div class="mode-name">Untimed</div>
+					<div class="mode-desc">No timer, no penalty. Practice at your own pace.</div>
+				</button>
 			</div>
 		</div>
 	{:else if gameState.phase === 'playing' || gameState.phase === 'answered'}
 		<div class="game-area">
-			<div class="mode-badge">{gameState.mode === 'sprint' ? '⚡ Sprint' : '🏔️ Marathon'}</div>
-			<Timer timer={gameState.timer} />
+			<div class="top-bar">
+				<div class="mode-badge">{modeLabels[gameState.mode]}</div>
+				<button
+					class="ref-toggle btn btn-secondary"
+					class:active={gameState.referenceVisible}
+					onclick={() => gameState.toggleReference()}
+					disabled={!canToggleRef}
+				>
+					{gameState.referenceVisible ? '📖 Hide Table' : '📖 Show Table'}
+					<span class="multiplier-hint">
+						{gameState.referenceVisible ? '(1x)' : '(2x)'}
+					</span>
+				</button>
+			</div>
+			{#if gameState.mode !== 'untimed'}
+				<Timer timer={gameState.timer} />
+			{/if}
 			<ScoreDisplay {gameState} />
+			{#if gameState.referenceVisible}
+				<ReferenceTable />
+			{/if}
 			<div class="puzzle-area">
 				<PuzzleComponent {gameState} />
+				{#if gameState.phase === 'answered' && gameState.lastBreakdown}
+					{#key gameState.roundsPlayed}
+						<ScoreAnimation breakdown={gameState.lastBreakdown} />
+					{/key}
+				{/if}
 			</div>
 			<div class="game-controls">
 				{#if canAdvance}
@@ -111,7 +151,7 @@
 	{:else if gameState.phase === 'done'}
 		<div class="done-screen">
 			<h3>Game Over</h3>
-			<div class="mode-badge done-mode">{gameState.mode === 'sprint' ? '⚡ Sprint' : '🏔️ Marathon'}</div>
+			<div class="mode-badge done-mode">{modeLabels[gameState.mode]}</div>
 			<div class="final-stats">
 				<div class="final-stat">
 					<span class="final-value mono">{gameState.score}</span>
@@ -200,10 +240,10 @@
 
 	.mode-picker {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr 1fr 1fr;
 		gap: 1rem;
 		width: 100%;
-		max-width: 500px;
+		max-width: 650px;
 	}
 
 	.mode-card {
@@ -245,6 +285,27 @@
 		margin-top: -0.5rem;
 	}
 
+	.top-bar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.ref-toggle {
+		font-size: 0.75rem;
+		padding: 0.3rem 0.7rem;
+		gap: 0.3rem;
+	}
+
+	.ref-toggle.active {
+		border-color: var(--accent);
+	}
+
+	.multiplier-hint {
+		color: var(--accent);
+		font-weight: 700;
+	}
+
 	.game-area {
 		display: flex;
 		flex-direction: column;
@@ -252,6 +313,8 @@
 	}
 
 	.puzzle-area {
+		position: relative;
+		overflow: hidden;
 		background: var(--bg-surface);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);

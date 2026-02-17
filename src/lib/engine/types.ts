@@ -34,8 +34,19 @@ export interface PuzzlePlugin {
 	shouldRegress(stats: RoundStats): boolean;
 }
 
+export interface ScoreBreakdown {
+	correct: boolean;
+	basePoints: number;
+	timeBonus: number;
+	timeRemaining: number;
+	multiplier: number;
+	total: number;
+	difficulty: number;
+	difficultyLabel: string;
+}
+
 export type GamePhase = 'ready' | 'playing' | 'answered' | 'done';
-export type GameMode = 'sprint' | 'marathon';
+export type GameMode = 'sprint' | 'marathon' | 'untimed';
 
 export interface GameSession {
 	score: number;

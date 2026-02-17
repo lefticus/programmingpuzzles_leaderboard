@@ -9,7 +9,8 @@
 	const puzzles = getAllPuzzles();
 	const modes = [
 		{ key: 'sprint', label: 'Sprint', icon: '⚡' },
-		{ key: 'marathon', label: 'Marathon', icon: '🏔️' }
+		{ key: 'marathon', label: 'Marathon', icon: '🏔️' },
+		{ key: 'untimed', label: 'Untimed', icon: '🧘' }
 	] as const;
 
 	const tabs = puzzles.flatMap(p =>
