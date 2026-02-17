@@ -16,14 +16,16 @@
 		binary: /[^01\s]/g,
 		octal: /[^0-7]/g,
 		decimal: /[^0-9]/g,
-		hex: /[^0-9a-fA-F]/g
+		hex: /[^0-9a-fA-F]/g,
+		ascii: /[^A-Z]/g
 	};
 
 	const prefixes: Record<NumberBase, string> = {
 		binary: '0b',
 		octal: '0o',
 		decimal: '',
-		hex: '0x'
+		hex: '0x',
+		ascii: ''
 	};
 
 	$effect(() => {
@@ -34,6 +36,9 @@
 	});
 
 	function handleInput() {
+		if (answerType === 'ascii') {
+			userAnswer = userAnswer.toUpperCase();
+		}
 		userAnswer = userAnswer.replace(inputFilter[answerType], '');
 	}
 
@@ -44,6 +49,7 @@
 	}
 
 	function formatExpectedDisplay(answer: string): string {
+		if (answerType === 'ascii') return answer;
 		const bits = answer.length;
 		if (answerType === 'binary') {
 			return formatForBase(BigInt('0b' + answer), 'binary', bits);

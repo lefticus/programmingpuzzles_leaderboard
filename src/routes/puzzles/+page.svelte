@@ -3,18 +3,20 @@
 	import { getPuzzle } from '$lib/engine/registry';
 	import { base } from '$app/paths';
 
-	const bases = ['binary', 'octal', 'decimal', 'hex'] as const;
+	const bases = ['binary', 'octal', 'decimal', 'hex', 'ascii'] as const;
 	const labels: Record<string, string> = {
 		binary: 'BIN',
 		octal: 'OCT',
 		decimal: 'DEC',
-		hex: 'HEX'
+		hex: 'HEX',
+		ascii: 'ASCII'
 	};
 	const icons: Record<string, string> = {
 		binary: '0b',
 		octal: '0o',
 		decimal: '10',
-		hex: '0x'
+		hex: '0x',
+		ascii: 'Az'
 	};
 
 	// Map each pair of bases to a puzzle slug
@@ -30,7 +32,15 @@
 		'octal-hex': 'octal-hex',
 		'hex-octal': 'octal-hex',
 		'decimal-hex': 'hex-decimal',
-		'hex-decimal': 'hex-decimal'
+		'hex-decimal': 'hex-decimal',
+		'ascii-binary': 'ascii-binary',
+		'binary-ascii': 'ascii-binary',
+		'ascii-octal': 'ascii-octal',
+		'octal-ascii': 'ascii-octal',
+		'ascii-decimal': 'ascii-decimal',
+		'decimal-ascii': 'ascii-decimal',
+		'ascii-hex': 'ascii-hex',
+		'hex-ascii': 'ascii-hex'
 	};
 
 	function getSlug(from: string, to: string): string | null {
@@ -90,7 +100,7 @@
 <style>
 	.puzzles-page {
 		text-align: center;
-		max-width: 550px;
+		max-width: 650px;
 		margin: 0 auto;
 	}
 
@@ -106,8 +116,8 @@
 
 	.grid-wrapper {
 		display: grid;
-		grid-template-columns: auto repeat(4, 1fr);
-		grid-template-rows: auto repeat(4, 1fr);
+		grid-template-columns: auto repeat(5, 1fr);
+		grid-template-rows: auto repeat(5, 1fr);
 		gap: 6px;
 	}
 

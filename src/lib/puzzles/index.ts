@@ -5,6 +5,10 @@ import { hexDecimalPlugin } from './hex-decimal/plugin';
 import { binaryOctalPlugin } from './binary-octal/plugin';
 import { octalHexPlugin } from './octal-hex/plugin';
 import { octalDecimalPlugin } from './octal-decimal/plugin';
+import { asciiBinaryPlugin } from './ascii-binary/plugin';
+import { asciiDecimalPlugin } from './ascii-decimal/plugin';
+import { asciiHexPlugin } from './ascii-hex/plugin';
+import { asciiOctalPlugin } from './ascii-octal/plugin';
 
 registerPuzzle(binaryDecimalPlugin);
 registerPuzzle(hexBinaryPlugin);
@@ -12,3 +16,7 @@ registerPuzzle(hexDecimalPlugin);
 registerPuzzle(binaryOctalPlugin);
 registerPuzzle(octalHexPlugin);
 registerPuzzle(octalDecimalPlugin);
+registerPuzzle(asciiBinaryPlugin);
+registerPuzzle(asciiDecimalPlugin);
+registerPuzzle(asciiHexPlugin);
+registerPuzzle(asciiOctalPlugin);

@@ -1,32 +1,68 @@
 <script lang="ts">
-	const rows = Array.from({ length: 17 }, (_, i) => ({
+	let { variant = 'numeric' }: { variant?: 'numeric' | 'ascii' } = $props();
+
+	const numericRows = Array.from({ length: 17 }, (_, i) => ({
 		dec: i.toString(),
 		bin: i.toString(2).padStart(4, '0'),
 		oct: i.toString(8),
 		hex: i.toString(16).toUpperCase()
 	}));
+
+	const asciiRows = Array.from({ length: 26 }, (_, i) => {
+		const code = 65 + i;
+		return {
+			char: String.fromCharCode(code),
+			dec: code.toString(),
+			hex: code.toString(16).toUpperCase(),
+			oct: code.toString(8),
+			bin: code.toString(2).padStart(8, '0')
+		};
+	});
 </script>
 
 <div class="reference-table">
 	<table>
-		<thead>
-			<tr>
-				<th>Dec</th>
-				<th>Bin</th>
-				<th>Oct</th>
-				<th>Hex</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each rows as row}
+		{#if variant === 'ascii'}
+			<thead>
 				<tr>
-					<td class="mono">{row.dec}</td>
-					<td class="mono">{row.bin}</td>
-					<td class="mono">{row.oct}</td>
-					<td class="mono">{row.hex}</td>
+					<th>Char</th>
+					<th>Dec</th>
+					<th>Hex</th>
+					<th>Oct</th>
+					<th>Bin</th>
 				</tr>
-			{/each}
-		</tbody>
+			</thead>
+			<tbody>
+				{#each asciiRows as row}
+					<tr>
+						<td class="mono">{row.char}</td>
+						<td class="mono">{row.dec}</td>
+						<td class="mono">{row.hex}</td>
+						<td class="mono">{row.oct}</td>
+						<td class="mono">{row.bin}</td>
+					</tr>
+				{/each}
+			</tbody>
+		{:else}
+			<thead>
+				<tr>
+					<th>Dec</th>
+					<th>Bin</th>
+					<th>Oct</th>
+					<th>Hex</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each numericRows as row}
+					<tr>
+						<td class="mono">{row.dec}</td>
+						<td class="mono">{row.bin}</td>
+						<td class="mono">{row.oct}</td>
+						<td class="mono">{row.hex}</td>
+					</tr>
+				{/each}
+			</tbody>
+		{/if}
 	</table>
 </div>
 
@@ -36,7 +72,7 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 0.75rem;
-		max-width: 280px;
+		max-width: 340px;
 		margin: 0 auto;
 	}
 

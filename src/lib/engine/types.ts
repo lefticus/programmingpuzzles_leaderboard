@@ -8,7 +8,7 @@ export interface RoundStats {
 	roundsPlayed: number;
 }
 
-export type NumberBase = 'binary' | 'octal' | 'decimal' | 'hex';
+export type NumberBase = 'binary' | 'octal' | 'decimal' | 'hex' | 'ascii';
 
 export interface PuzzleRound {
 	prompt: string;
