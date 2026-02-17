@@ -1,0 +1,40 @@
+import type { Component } from 'svelte';
+
+export interface RoundStats {
+	consecutiveCorrect: number;
+	consecutiveWrong: number;
+	totalCorrect: number;
+	totalWrong: number;
+	roundsPlayed: number;
+}
+
+export interface PuzzleRound {
+	prompt: string;
+	answer: string;
+	displayPrompt?: string;
+}
+
+export interface PuzzlePlugin {
+	slug: string;
+	name: string;
+	description: string;
+	icon: string;
+	component: Component;
+	minDifficulty: number;
+	maxDifficulty: number;
+	difficultyLabel(level: number): string;
+	timerDuration(difficulty: number): number;
+	generateRound(difficulty: number, seen: Set<string>): PuzzleRound;
+	scoreForSolve(difficulty: number, timeRemaining: number, timerDuration: number): number;
+	shouldAdvance(stats: RoundStats): boolean;
+	shouldRegress(stats: RoundStats): boolean;
+}
+
+export type GamePhase = 'ready' | 'playing' | 'answered' | 'done';
+export type GameMode = 'sprint' | 'marathon';
+
+export interface GameSession {
+	score: number;
+	maxDifficulty: number;
+	roundsPlayed: number;
+}
