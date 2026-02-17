@@ -95,6 +95,11 @@
 			{/each}
 		{/each}
 	</div>
+
+	<a href="{base}/puzzles/numeric-mixed/" class="mixed-card">
+		<span class="mixed-title">Numeric Mixed</span>
+		<span class="mixed-desc">Random mix of binary, octal, decimal &amp; hex conversions</span>
+	</a>
 </div>
 
 <style>
@@ -226,5 +231,41 @@
 
 	.grid-cell:hover:not(.disabled) .cell-arrow {
 		color: var(--accent);
+	}
+
+	/* Mixed mode card */
+	.mixed-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+		margin-top: 1.5rem;
+		padding: 1rem;
+		background: var(--bg-surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		text-decoration: none;
+		color: var(--text);
+		transition: all 0.15s;
+	}
+
+	.mixed-card:hover {
+		border-color: var(--accent);
+		background: var(--bg-elevated);
+		transform: scale(1.02);
+		text-decoration: none;
+	}
+
+	.mixed-title {
+		font-family: var(--font-mono);
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: var(--accent);
+	}
+
+	.mixed-desc {
+		font-size: 0.8rem;
+		color: var(--text-muted);
 	}
 </style>

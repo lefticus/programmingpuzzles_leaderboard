@@ -9,6 +9,7 @@ import { asciiBinaryPlugin } from './ascii-binary/plugin';
 import { asciiDecimalPlugin } from './ascii-decimal/plugin';
 import { asciiHexPlugin } from './ascii-hex/plugin';
 import { asciiOctalPlugin } from './ascii-octal/plugin';
+import { numericMixedPlugin } from './numeric-mixed/plugin';
 
 registerPuzzle(binaryDecimalPlugin);
 registerPuzzle(hexBinaryPlugin);
@@ -20,3 +21,4 @@ registerPuzzle(asciiBinaryPlugin);
 registerPuzzle(asciiDecimalPlugin);
 registerPuzzle(asciiHexPlugin);
 registerPuzzle(asciiOctalPlugin);
+registerPuzzle(numericMixedPlugin);
