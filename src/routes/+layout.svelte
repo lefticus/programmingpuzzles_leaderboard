@@ -10,7 +10,7 @@
 	<nav class="navbar">
 		<div class="nav-content">
 			<a href="{base}/" class="nav-brand">
-				<span class="brand-icon">🧩</span>
+				<img src="{base}/logo.png" alt="" class="brand-icon" />
 				<span class="brand-text">Puzzle Games</span>
 			</a>
 			<div class="nav-links">
@@ -61,7 +61,8 @@
 	}
 
 	.brand-icon {
-		font-size: 1.4rem;
+		height: 1.4rem;
+		width: auto;
 	}
 
 	.nav-links {

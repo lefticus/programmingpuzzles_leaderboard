@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { afterNavigate } from '$app/navigation';
+	import BookPromo from '$lib/components/BookPromo.svelte';
 
 	afterNavigate(() => {
 		requestAnimationFrame(() => {
@@ -26,7 +27,7 @@
 
 <div class="landing">
 	<div class="hero">
-		<h1>🧩 Puzzle Games</h1>
+		<h1><img src="{base}/logo.png" alt="" class="hero-logo" /> Puzzle Games</h1>
 		<p class="subtitle">Sharpen your skills with timed programming puzzles.<br />Compete on the leaderboard. Level up.</p>
 		<div class="cta">
 			{#if auth.user}
@@ -37,6 +38,8 @@
 			<a href="{base}/leaderboard/" class="btn btn-secondary btn-lg" onkeydown={ctaArrow}>Leaderboard</a>
 		</div>
 	</div>
+
+	<BookPromo variant="banner" />
 
 	<div class="features">
 		<div class="feature card">
@@ -74,6 +77,12 @@
 		font-size: 3rem;
 		font-weight: 700;
 		margin-bottom: 1rem;
+	}
+
+	.hero-logo {
+		height: 1em;
+		width: auto;
+		vertical-align: -0.1em;
 	}
 
 	.subtitle {

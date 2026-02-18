@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { getPuzzle } from '$lib/engine/registry';
 	import GameShell from '$lib/components/GameShell.svelte';
+	import BookPromo from '$lib/components/BookPromo.svelte';
 	import { base } from '$app/paths';
 
 	const slug = $derived(page.params.slug ?? '');
@@ -14,6 +15,7 @@
 </svelte:head>
 
 {#if plugin}
+	<div class="puzzle-page-promo"><BookPromo variant="banner" /></div>
 	{#key slug}
 		<GameShell {plugin} />
 	{/key}
@@ -26,6 +28,12 @@
 {/if}
 
 <style>
+	.puzzle-page-promo {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 1.5rem;
+	}
+
 	.not-found {
 		text-align: center;
 		padding-top: 3rem;

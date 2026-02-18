@@ -10,6 +10,7 @@
 	import ScoreAnimation from './ScoreAnimation.svelte';
 	import LevelUpEffect from './LevelUpEffect.svelte';
 	import { explainConversion } from '$lib/puzzles/explain';
+	import BookPromo from './BookPromo.svelte';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 
@@ -319,6 +320,8 @@
 				</button>
 				<a href="{base}/puzzles/" class="btn btn-secondary" onkeydown={(e) => arrowNav(e, '.done-actions .btn')}>Back to Puzzles</a>
 			</div>
+
+			<BookPromo variant="compact" />
 
 			{#if submitted}
 				<div class="leaderboard-section">

@@ -3,6 +3,7 @@
 	import { getPuzzle } from '$lib/engine/registry';
 	import { base } from '$app/paths';
 	import { afterNavigate } from '$app/navigation';
+	import BookPromo from '$lib/components/BookPromo.svelte';
 
 	afterNavigate(() => {
 		requestAnimationFrame(() => {
@@ -110,6 +111,8 @@
 </svelte:head>
 
 <div class="puzzles-page">
+	<BookPromo variant="banner" />
+
 	<h1>Choose a Puzzle</h1>
 	<p class="subtitle">Pick two number systems to convert between</p>
 
