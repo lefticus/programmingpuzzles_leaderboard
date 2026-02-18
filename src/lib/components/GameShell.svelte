@@ -19,6 +19,8 @@
 	let submitting = $state(false);
 	let submitted = $state(false);
 	let submitError = $state('');
+	let puzzleAreaEl = $state<HTMLDivElement | null>(null);
+	let puzzleAreaMinHeight = $state(0);
 
 	const canAdvance = $derived(
 		(gameState.phase === 'answered' || gameState.phase === 'level-up') &&
@@ -100,13 +102,18 @@
 	});
 
 	$effect(() => {
-		// Auto-focus the primary interactive element when phase changes
+		// Auto-focus and measure puzzle area on phase changes
 		const phase = gameState.phase;
 		requestAnimationFrame(() => {
 			if (phase === 'ready') {
 				(document.querySelector('.mode-card') as HTMLElement)?.focus();
 			} else if (phase === 'starting') {
 				(document.querySelector('.start-btn') as HTMLElement)?.focus();
+			} else if (phase === 'playing') {
+				// Capture puzzle area height on first playing frame
+				if (puzzleAreaEl) {
+					puzzleAreaMinHeight = puzzleAreaEl.scrollHeight;
+				}
 			} else if (phase === 'answered' || phase === 'level-up') {
 				(document.querySelector('.game-controls .btn-primary') as HTMLElement)?.focus();
 			} else if (phase === 'done') {
@@ -138,6 +145,7 @@
 
 	function startWithMode(mode: GameMode) {
 		submitted = false;
+		puzzleAreaMinHeight = 0;
 		gameState.startGame(mode);
 	}
 
@@ -196,12 +204,15 @@
 					>
 						{#if canToggleRef || gameState.phase === 'starting'}
 							{gameState.referenceVisible ? 'Hide Table' : 'Show Table'}
-							<span class="multiplier-hint">
+							<span class="multiplier-hint" class:is-boosted={!gameState.referenceVisible}>
 								{gameState.referenceVisible ? '(1x)' : '(2x)'}
 							</span>
+							<kbd class="ref-kbd">r</kbd>
 						{:else}
 							{gameState.referenceVisible ? 'Table Shown' : 'Table Hidden'}
-							<span class="locked-hint">Locked</span>
+							<span class="multiplier-hint" class:is-boosted={!gameState.referenceVisible}>
+								{gameState.referenceVisible ? '(1x)' : '(2x)'}
+							</span>
 						{/if}
 					</button>
 				</div>
@@ -209,7 +220,7 @@
 					<Timer timer={gameState.timer} />
 				{/if}
 				<ScoreDisplay {gameState} />
-				<div class="puzzle-area">
+				<div class="puzzle-area" bind:this={puzzleAreaEl} style:min-height="{puzzleAreaMinHeight}px">
 					{#if gameState.phase === 'starting'}
 						<div class="begin-prompt">
 							<button class="start-btn btn btn-primary" onclick={() => gameState.nextRound()}>
@@ -479,14 +490,26 @@
 	.multiplier-hint {
 		color: var(--accent);
 		font-weight: 700;
+		transition: color 0.2s, text-shadow 0.2s;
 	}
 
-	.locked-hint {
-		color: var(--text-dim);
-		font-weight: 600;
-		font-size: 0.65rem;
-		letter-spacing: 0.06em;
+	.multiplier-hint.is-boosted {
+		color: #fbbf24;
+		text-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
 	}
+
+	.ref-kbd {
+		font-family: var(--font-mono);
+		font-size: 0.6rem;
+		font-weight: 700;
+		color: var(--text-dim);
+		background: var(--bg);
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		padding: 0 0.25rem;
+		line-height: 1.3;
+	}
+
 
 	.game-area {
 		display: flex;

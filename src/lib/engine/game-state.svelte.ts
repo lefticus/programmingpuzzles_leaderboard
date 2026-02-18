@@ -18,7 +18,7 @@ export class GameState {
 	lastScore = $state(0);
 	lastBreakdown = $state<ScoreBreakdown | null>(null);
 	lastAdvanced = $state(false);
-	referenceVisible = $state(false);
+	referenceVisible = $state(true);
 	scoreMultiplier = $derived(this.referenceVisible ? 1 : 2);
 
 	timer = new CountdownTimer();

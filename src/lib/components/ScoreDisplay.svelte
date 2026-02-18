@@ -35,6 +35,12 @@
 		<div class="stat-value mono">{gameState.totalCorrect}/{gameState.totalCorrect + gameState.totalWrong || 0}</div>
 		<div class="stat-label">Accuracy</div>
 	</div>
+	<div class="stat">
+		<div class="stat-value mono multiplier" class:boosted={gameState.scoreMultiplier > 1}>
+			{gameState.scoreMultiplier}x
+		</div>
+		<div class="stat-label">Ref Table</div>
+	</div>
 </div>
 
 <style>
@@ -81,5 +87,16 @@
 
 	.strike-dot.active {
 		color: var(--error);
+	}
+
+	.multiplier {
+		transition: color 0.3s, text-shadow 0.3s;
+	}
+
+	.multiplier.boosted {
+		color: #fbbf24;
+		text-shadow:
+			0 0 8px rgba(251, 191, 36, 0.6),
+			0 0 20px rgba(251, 191, 36, 0.3);
 	}
 </style>

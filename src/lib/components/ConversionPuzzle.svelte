@@ -87,21 +87,9 @@
 		</form>
 	{/if}
 
-	{#if gameState.phase === 'answered'}
-		<div class="result" class:correct={gameState.lastAnswerCorrect} class:wrong={!gameState.lastAnswerCorrect}>
-			{#if gameState.lastAnswerCorrect}
-				<div class="result-label">Correct! +{gameState.lastScore}</div>
-			{:else}
-				<div class="result-label">
-					{gameState.timer.remaining <= 0 ? 'Time\'s up!' : 'Wrong!'}
-					{#if gameState.lastScore < 0}
-						<span class="penalty">{gameState.lastScore}</span>
-					{/if}
-				</div>
-				<div class="expected mono">
-					Answer: {formatExpectedDisplay(round!.answer)}
-				</div>
-			{/if}
+	{#if gameState.phase === 'answered' && !gameState.lastAnswerCorrect}
+		<div class="expected mono">
+			Answer: {formatExpectedDisplay(round!.answer)}
 		</div>
 	{/if}
 </div>
@@ -184,44 +172,9 @@
 		outline: none;
 	}
 
-	.result {
-		text-align: center;
-		padding: 1rem 1.5rem;
-		border-radius: var(--radius);
-		min-width: 200px;
-	}
-
-	.result.correct {
-		background: #065f4633;
-		border: 1px solid var(--success);
-	}
-
-	.result.wrong {
-		background: #991b1b33;
-		border: 1px solid var(--error);
-	}
-
-	.result-label {
-		font-weight: 700;
-		font-size: 1.1rem;
-	}
-
-	.correct .result-label {
-		color: var(--success);
-	}
-
-	.wrong .result-label {
-		color: var(--error);
-	}
-
 	.expected {
-		margin-top: 0.5rem;
+		text-align: center;
 		color: var(--text-muted);
 		font-size: 0.95rem;
-	}
-
-	.penalty {
-		font-size: 0.9rem;
-		opacity: 0.8;
 	}
 </style>
