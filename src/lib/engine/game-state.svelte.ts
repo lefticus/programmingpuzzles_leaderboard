@@ -10,6 +10,7 @@ export class GameState {
 	roundsPlayed = $state(0);
 	consecutiveCorrect = $state(0);
 	consecutiveWrong = $state(0);
+	streak = $state(0);
 	totalCorrect = $state(0);
 	totalWrong = $state(0);
 	currentRound = $state<PuzzleRound | null>(null);
@@ -38,6 +39,7 @@ export class GameState {
 		this.roundsPlayed = 0;
 		this.consecutiveCorrect = 0;
 		this.consecutiveWrong = 0;
+		this.streak = 0;
 		this.totalCorrect = 0;
 		this.totalWrong = 0;
 		this.seen.clear();
@@ -78,14 +80,18 @@ export class GameState {
 		if (correct) {
 			const basePoints = Math.floor(Math.pow(this.difficulty, 1.5) * 5);
 			const timeRemaining = this.mode !== 'untimed' ? this.timer.remaining : 0;
-			const timeBonus = this.mode !== 'untimed' ? Math.floor(timeRemaining) : 0;
-			const preMultiplier = basePoints + timeBonus;
+			const timeBonus = this.mode !== 'untimed' ? Math.floor(timeRemaining * 4) : 0;
+			this.streak++;
+			const streakBonus = Math.floor(basePoints * (this.streak - 1) * 0.1);
+			const preMultiplier = basePoints + timeBonus + streakBonus;
 			const total = preMultiplier * this.scoreMultiplier;
 			this.lastBreakdown = {
 				correct: true,
 				basePoints,
 				timeBonus,
 				timeRemaining,
+				streakCount: this.streak,
+				streakBonus,
 				multiplier: this.scoreMultiplier,
 				total,
 				difficulty: this.difficulty,
@@ -127,12 +133,14 @@ export class GameState {
 	private handleWrong() {
 		this.consecutiveWrong++;
 		this.consecutiveCorrect = 0;
+		this.streak = 0;
 		this.totalWrong++;
 
 		if (this.mode === 'sprint') {
 			this.lastScore = 0;
 			this.lastBreakdown = {
 				correct: false, basePoints: 0, timeBonus: 0, timeRemaining: 0,
+				streakCount: 0, streakBonus: 0,
 				multiplier: this.scoreMultiplier, total: 0,
 				difficulty: this.difficulty,
 				difficultyLabel: this.plugin.difficultyLabel(this.difficulty)
@@ -147,6 +155,7 @@ export class GameState {
 			this.score -= penalty;
 			this.lastBreakdown = {
 				correct: false, basePoints: -penalty, timeBonus: 0, timeRemaining: 0,
+				streakCount: 0, streakBonus: 0,
 				multiplier: 1, total: -penalty,
 				difficulty: this.difficulty,
 				difficultyLabel: this.plugin.difficultyLabel(this.difficulty)
@@ -156,6 +165,7 @@ export class GameState {
 			this.lastScore = 0;
 			this.lastBreakdown = {
 				correct: false, basePoints: 0, timeBonus: 0, timeRemaining: 0,
+				streakCount: 0, streakBonus: 0,
 				multiplier: this.scoreMultiplier, total: 0,
 				difficulty: this.difficulty,
 				difficultyLabel: this.plugin.difficultyLabel(this.difficulty)

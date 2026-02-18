@@ -5,7 +5,7 @@
 	import GameShell from '$lib/components/GameShell.svelte';
 	import { base } from '$app/paths';
 
-	const slug = $derived(page.params.slug);
+	const slug = $derived(page.params.slug ?? '');
 	const plugin = $derived(getPuzzle(slug));
 </script>
 

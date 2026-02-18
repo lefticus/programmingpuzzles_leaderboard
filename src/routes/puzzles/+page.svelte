@@ -2,6 +2,13 @@
 	import '$lib/puzzles';
 	import { getPuzzle } from '$lib/engine/registry';
 	import { base } from '$app/paths';
+	import { afterNavigate } from '$app/navigation';
+
+	afterNavigate(() => {
+		requestAnimationFrame(() => {
+			(document.querySelector('.grid-cell[data-row]') as HTMLElement)?.focus();
+		});
+	});
 
 	const bases = ['binary', 'octal', 'decimal', 'hex', 'ascii'] as const;
 	const labels: Record<string, string> = {
@@ -52,6 +59,49 @@
 		const slug = getSlug(from, to);
 		return slug ? getPuzzle(slug) : undefined;
 	}
+
+	function handleGridKeydown(e: KeyboardEvent) {
+		const dirs: Record<string, [number, number]> = {
+			ArrowUp: [-1, 0],
+			ArrowDown: [1, 0],
+			ArrowLeft: [0, -1],
+			ArrowRight: [0, 1]
+		};
+		const dir = dirs[e.key];
+		if (!dir) return;
+
+		const cell = (e.target as HTMLElement).closest('[data-row]') as HTMLElement | null;
+		if (!cell) return;
+
+		e.preventDefault();
+		let row = Number(cell.dataset.row);
+		let col = Number(cell.dataset.col);
+		const n = bases.length;
+
+		// Step in direction, skipping disabled cells
+		for (let i = 0; i < n; i++) {
+			row = row + dir[0];
+			col = col + dir[1];
+
+			// Down past bottom row → mixed card
+			if (row >= n && dir[0] === 1) {
+				(document.querySelector('.mixed-card') as HTMLElement)?.focus();
+				return;
+			}
+
+			// Wrap on edges
+			row = (row + n) % n;
+			col = (col + n) % n;
+
+			if (row !== col) {
+				const target = document.querySelector(
+					`.grid-cell[data-row="${row}"][data-col="${col}"]`
+				) as HTMLElement | null;
+				target?.focus();
+				return;
+			}
+		}
+	}
 </script>
 
 <svelte:head>
@@ -77,16 +127,22 @@
 		{/each}
 
 		<!-- Rows -->
-		{#each bases as rowBase}
+		{#each bases as rowBase, ri}
 			<div class="row-header">
 				<span class="header-icon mono">{icons[rowBase]}</span>
 				<span class="header-label">{labels[rowBase]}</span>
 			</div>
-			{#each bases as colBase}
+			{#each bases as colBase, ci}
 				{@const slug = getSlug(rowBase, colBase)}
 				{@const plugin = getPlugin(rowBase, colBase)}
 				{#if slug && plugin}
-					<a href="{base}/puzzles/{slug}/" class="grid-cell">
+					<a
+						href="{base}/puzzles/{slug}/"
+						class="grid-cell"
+						data-row={ri}
+						data-col={ci}
+						onkeydown={handleGridKeydown}
+					>
 						<span class="cell-arrow">{labels[rowBase]} ↔ {labels[colBase]}</span>
 					</a>
 				{:else}
@@ -96,7 +152,17 @@
 		{/each}
 	</div>
 
-	<a href="{base}/puzzles/numeric-mixed/" class="mixed-card">
+	<a
+		href="{base}/puzzles/numeric-mixed/"
+		class="mixed-card"
+		onkeydown={(e) => {
+			if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				const last = document.querySelector('.grid-cell[data-row="4"][data-col="3"]') as HTMLElement | null;
+				last?.focus();
+			}
+		}}
+	>
 		<span class="mixed-title">Numeric Mixed</span>
 		<span class="mixed-desc">Random mix of binary, octal, decimal &amp; hex conversions</span>
 	</a>
@@ -208,11 +274,14 @@
 		transition: all 0.15s;
 	}
 
-	.grid-cell:hover:not(.disabled) {
+	.grid-cell:hover:not(.disabled),
+	.grid-cell:focus-visible {
 		border-color: var(--accent);
 		background: var(--bg-elevated);
 		transform: scale(1.05);
 		text-decoration: none;
+		outline: none;
+		box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(34, 211, 238, 0.3);
 	}
 
 	.grid-cell.disabled {
@@ -229,7 +298,8 @@
 		letter-spacing: 0.02em;
 	}
 
-	.grid-cell:hover:not(.disabled) .cell-arrow {
+	.grid-cell:hover:not(.disabled) .cell-arrow,
+	.grid-cell:focus-visible .cell-arrow {
 		color: var(--accent);
 	}
 
@@ -250,11 +320,14 @@
 		transition: all 0.15s;
 	}
 
-	.mixed-card:hover {
+	.mixed-card:hover,
+	.mixed-card:focus-visible {
 		border-color: var(--accent);
 		background: var(--bg-elevated);
 		transform: scale(1.02);
 		text-decoration: none;
+		outline: none;
+		box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(34, 211, 238, 0.3);
 	}
 
 	.mixed-title {

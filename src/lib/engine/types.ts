@@ -41,6 +41,8 @@ export interface ScoreBreakdown {
 	basePoints: number;
 	timeBonus: number;
 	timeRemaining: number;
+	streakCount: number;
+	streakBonus: number;
 	multiplier: number;
 	total: number;
 	difficulty: number;

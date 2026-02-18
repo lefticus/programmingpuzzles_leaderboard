@@ -26,7 +26,7 @@
 	);
 
 	const canToggleRef = $derived(
-		gameState.phase !== 'done' && gameState.phase !== 'ready'
+		gameState.phase === 'answered' || gameState.phase === 'level-up'
 	);
 
 	const modeLabels: Record<GameMode, string> = {
@@ -44,9 +44,30 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
+		// Don't intercept when typing in an input
+		const tag = (e.target as HTMLElement)?.tagName;
+		if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
 		if (e.key === 'Enter' && canAdvance) {
 			e.preventDefault();
 			advanceOrCelebrate();
+		}
+
+		// Mode selection: 1/2/3 on ready screen
+		if (gameState.phase === 'ready') {
+			if (e.key === '1') startWithMode('sprint');
+			else if (e.key === '2') startWithMode('marathon');
+			else if (e.key === '3') startWithMode('untimed');
+		}
+
+		// Reference toggle: r
+		if (e.key === 'r' && canToggleRef) {
+			gameState.toggleReference();
+		}
+
+		// End game: Escape
+		if (e.key === 'Escape' && gameState.phase !== 'ready' && gameState.phase !== 'done') {
+			gameState.endGame();
 		}
 	}
 
@@ -59,6 +80,20 @@
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('keydown', handleKeydown);
 		}
+	});
+
+	$effect(() => {
+		// Auto-focus the primary interactive element when phase changes
+		const phase = gameState.phase;
+		requestAnimationFrame(() => {
+			if (phase === 'ready') {
+				(document.querySelector('.mode-card') as HTMLElement)?.focus();
+			} else if (phase === 'answered' || phase === 'level-up') {
+				(document.querySelector('.game-controls .btn-primary') as HTMLElement)?.focus();
+			} else if (phase === 'done') {
+				(document.querySelector('.done-actions .btn-primary') as HTMLElement)?.focus();
+			}
+		});
 	});
 
 	async function submitScore() {
@@ -87,6 +122,17 @@
 		gameState.startGame(mode);
 	}
 
+	function arrowNav(e: KeyboardEvent, selector: string) {
+		const next = e.key === 'ArrowRight' || e.key === 'ArrowDown';
+		const prev = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
+		if (!next && !prev) return;
+		e.preventDefault();
+		const items = [...document.querySelectorAll(selector)] as HTMLElement[];
+		const idx = items.indexOf(e.currentTarget as HTMLElement);
+		const target = items[(idx + (next ? 1 : -1) + items.length) % items.length];
+		target?.focus();
+	}
+
 	const PuzzleComponent = $derived(plugin.component);
 </script>
 
@@ -99,64 +145,77 @@
 		<div class="ready-screen">
 			<p>{plugin.description}</p>
 			<div class="mode-picker">
-				<button class="mode-card card" onclick={() => startWithMode('sprint')}>
+				<button class="mode-card card" onclick={() => startWithMode('sprint')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
+					<kbd class="kbd-hint">1</kbd>
 					<div class="mode-name">Sprint</div>
 					<div class="mode-desc">3 wrong in a row and you're out. High risk, high reward.</div>
 				</button>
-				<button class="mode-card card" onclick={() => startWithMode('marathon')}>
+				<button class="mode-card card" onclick={() => startWithMode('marathon')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
+					<kbd class="kbd-hint">2</kbd>
 					<div class="mode-name">Marathon</div>
 					<div class="mode-desc">No game over. Wrong answers deduct points. End when you want.</div>
 				</button>
-				<button class="mode-card card" onclick={() => startWithMode('untimed')}>
+				<button class="mode-card card" onclick={() => startWithMode('untimed')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
+					<kbd class="kbd-hint">3</kbd>
 					<div class="mode-name">Untimed</div>
 					<div class="mode-desc">No timer, no penalty. Practice at your own pace.</div>
 				</button>
 			</div>
 		</div>
 	{:else if gameState.phase === 'playing' || gameState.phase === 'answered' || gameState.phase === 'level-up'}
-		<div class="game-area">
-			<div class="top-bar">
-				<div class="mode-badge">{modeLabels[gameState.mode]}</div>
-				<button
-					class="ref-toggle btn btn-secondary"
-					class:active={gameState.referenceVisible}
-					onclick={() => gameState.toggleReference()}
-					disabled={!canToggleRef}
-				>
-					{gameState.referenceVisible ? 'Hide Table' : 'Show Table'}
-					<span class="multiplier-hint">
-						{gameState.referenceVisible ? '(1x)' : '(2x)'}
-					</span>
-				</button>
-			</div>
-			{#if gameState.mode !== 'untimed'}
-				<Timer timer={gameState.timer} />
-			{/if}
-			<ScoreDisplay {gameState} />
-			{#if gameState.referenceVisible}
-				<ReferenceTable variant={refVariant} />
-			{/if}
-			<div class="puzzle-area">
-				<PuzzleComponent {gameState} />
-				{#if gameState.phase === 'answered' && gameState.lastBreakdown}
-					{#key gameState.roundsPlayed}
-						<ScoreAnimation breakdown={gameState.lastBreakdown} />
-					{/key}
-				{/if}
-				{#if gameState.phase === 'level-up'}
-					<LevelUpEffect label={gameState.plugin.difficultyLabel(gameState.difficulty)} />
-				{/if}
-			</div>
-			<div class="game-controls">
-				{#if canAdvance}
-					<button class="btn btn-primary" onclick={() => advanceOrCelebrate()}>
-						{gameState.phase === 'level-up' ? 'Continue' : 'Next Round'}
+		<div class="game-layout" class:ref-open={gameState.referenceVisible}>
+			<div class="game-area">
+				<div class="top-bar">
+					<div class="mode-badge">{modeLabels[gameState.mode]}</div>
+					<button
+						class="ref-toggle btn btn-secondary"
+						class:active={gameState.referenceVisible}
+						onclick={() => gameState.toggleReference()}
+						disabled={!canToggleRef}
+						title={!canToggleRef ? 'Locked during puzzle' : ''}
+					>
+						{#if canToggleRef}
+							{gameState.referenceVisible ? 'Hide Table' : 'Show Table'}
+							<span class="multiplier-hint">
+								{gameState.referenceVisible ? '(1x)' : '(2x)'}
+							</span>
+						{:else}
+							{gameState.referenceVisible ? 'Table Shown' : 'Table Hidden'}
+							<span class="locked-hint">Locked</span>
+						{/if}
 					</button>
+				</div>
+				{#if gameState.mode !== 'untimed'}
+					<Timer timer={gameState.timer} />
 				{/if}
-				<button class="btn btn-danger" onclick={() => gameState.endGame()}>
-					End Game
-				</button>
+				<ScoreDisplay {gameState} />
+				<div class="puzzle-area">
+					<PuzzleComponent {gameState} />
+					{#if gameState.phase === 'answered' && gameState.lastBreakdown}
+						{#key gameState.roundsPlayed}
+							<ScoreAnimation breakdown={gameState.lastBreakdown} />
+						{/key}
+					{/if}
+					{#if gameState.phase === 'level-up'}
+						<LevelUpEffect label={gameState.plugin.difficultyLabel(gameState.difficulty)} />
+					{/if}
+				</div>
+				<div class="game-controls">
+					{#if canAdvance}
+						<button class="btn btn-primary" onclick={() => advanceOrCelebrate()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
+							{gameState.phase === 'level-up' ? 'Continue' : 'Next Round'}
+						</button>
+					{/if}
+					<button class="btn btn-danger" onclick={() => gameState.endGame()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
+						End Game
+					</button>
+				</div>
 			</div>
+			{#if gameState.referenceVisible}
+				<aside class="ref-sidebar">
+					<ReferenceTable variant={refVariant} />
+				</aside>
+			{/if}
 		</div>
 	{:else if gameState.phase === 'done'}
 		<div class="done-screen">
@@ -205,10 +264,10 @@
 			{/if}
 
 			<div class="done-actions">
-				<button class="btn btn-primary" onclick={() => { gameState.phase = 'ready'; }}>
+				<button class="btn btn-primary" onclick={() => { gameState.phase = 'ready'; }} onkeydown={(e) => arrowNav(e, '.done-actions .btn')}>
 					Play Again
 				</button>
-				<a href="{base}/puzzles/" class="btn btn-secondary">Back to Puzzles</a>
+				<a href="{base}/puzzles/" class="btn btn-secondary" onkeydown={(e) => arrowNav(e, '.done-actions .btn')}>Back to Puzzles</a>
 			</div>
 
 			{#if submitted}
@@ -224,6 +283,44 @@
 	.game-shell {
 		max-width: 700px;
 		margin: 0 auto;
+	}
+
+	.game-layout {
+		display: flex;
+		gap: 1.5rem;
+		align-items: flex-start;
+	}
+
+	.game-layout .game-area {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.ref-sidebar {
+		position: sticky;
+		top: 5rem;
+		flex-shrink: 0;
+	}
+
+	/* Widen shell when reference table is open */
+	:global(.game-shell:has(.ref-open)) {
+		max-width: 1060px;
+	}
+
+	/* Stack on narrow screens */
+	@media (max-width: 800px) {
+		.game-layout {
+			flex-direction: column;
+		}
+
+		.ref-sidebar {
+			position: static;
+			align-self: center;
+		}
+
+		:global(.game-shell:has(.ref-open)) {
+			max-width: 700px;
+		}
 	}
 
 	.game-header {
@@ -257,14 +354,33 @@
 	}
 
 	.mode-card {
+		position: relative;
 		text-align: center;
 		cursor: pointer;
 		transition: border-color 0.15s, transform 0.15s;
 	}
 
-	.mode-card:hover {
+	.mode-card:hover,
+	.mode-card:focus-visible {
 		border-color: var(--accent);
 		transform: translateY(-2px);
+		outline: none;
+		box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(34, 211, 238, 0.3);
+	}
+
+	.kbd-hint {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.6rem;
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 700;
+		color: var(--text-dim);
+		background: var(--bg-elevated);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 0.1rem 0.35rem;
+		line-height: 1.2;
 	}
 
 	.mode-name {
@@ -306,9 +422,21 @@
 		border-color: var(--accent);
 	}
 
+	.ref-toggle:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+
 	.multiplier-hint {
 		color: var(--accent);
 		font-weight: 700;
+	}
+
+	.locked-hint {
+		color: var(--text-dim);
+		font-weight: 600;
+		font-size: 0.65rem;
+		letter-spacing: 0.06em;
 	}
 
 	.game-area {

@@ -90,7 +90,6 @@
 			<span class="unlock-level">{label}</span>
 			<span class="unlock-text">Puzzles Unlocked!</span>
 		</div>
-		<div class="hint">Press Enter to continue</div>
 	</div>
 </div>
 
@@ -177,14 +176,6 @@
 		text-shadow:
 			0 0 20px rgba(34, 211, 238, 0.6),
 			0 0 40px rgba(34, 211, 238, 0.3);
-	}
-
-	.hint {
-		opacity: 0;
-		animation: fade-in 0.5s ease-out 1s forwards;
-		font-size: 0.85rem;
-		color: var(--text-muted);
-		margin-top: 0.8rem;
 	}
 
 	@keyframes slam-in {

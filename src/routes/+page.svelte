@@ -1,6 +1,22 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { afterNavigate } from '$app/navigation';
+
+	afterNavigate(() => {
+		requestAnimationFrame(() => {
+			(document.querySelector('.cta .btn-primary') as HTMLElement)?.focus();
+		});
+	});
+
+	function ctaArrow(e: KeyboardEvent) {
+		const isArrow = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key);
+		if (!isArrow) return;
+		e.preventDefault();
+		const btns = [...document.querySelectorAll('.cta .btn')] as HTMLElement[];
+		const idx = btns.indexOf(e.currentTarget as HTMLElement);
+		btns[(idx + 1) % btns.length]?.focus();
+	}
 </script>
 
 <svelte:head>
@@ -13,11 +29,11 @@
 		<p class="subtitle">Sharpen your skills with timed programming puzzles.<br />Compete on the leaderboard. Level up.</p>
 		<div class="cta">
 			{#if auth.user}
-				<a href="{base}/puzzles/" class="btn btn-primary btn-lg">Play Now</a>
+				<a href="{base}/puzzles/" class="btn btn-primary btn-lg" onkeydown={ctaArrow}>Play Now</a>
 			{:else}
-				<a href="{base}/login/" class="btn btn-primary btn-lg">Sign In to Play</a>
+				<a href="{base}/login/" class="btn btn-primary btn-lg" onkeydown={ctaArrow}>Sign In to Play</a>
 			{/if}
-			<a href="{base}/leaderboard/" class="btn btn-secondary btn-lg">Leaderboard</a>
+			<a href="{base}/leaderboard/" class="btn btn-secondary btn-lg" onkeydown={ctaArrow}>Leaderboard</a>
 		</div>
 	</div>
 

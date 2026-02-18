@@ -18,7 +18,7 @@
 		<div class="stat-label">Rounds</div>
 	</div>
 	<div class="stat">
-		<div class="stat-value mono">{gameState.consecutiveCorrect}</div>
+		<div class="stat-value mono">{gameState.streak}</div>
 		<div class="stat-label">Streak</div>
 	</div>
 	{#if isSprint}

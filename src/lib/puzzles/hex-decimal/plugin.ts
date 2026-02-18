@@ -4,7 +4,7 @@ export const hexDecimalPlugin = createConversionPlugin({
 	slug: 'hex-decimal',
 	name: 'Hex ↔ Decimal',
 	description: 'Convert between hexadecimal and decimal numbers.',
-	minDifficulty: 4,
+	minDifficulty: 1,
 	maxDifficulty: 64,
 	difficultyLabel: bitLabel,
 	timerConfig: timerStandard,

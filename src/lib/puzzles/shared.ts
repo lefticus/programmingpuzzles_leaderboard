@@ -309,7 +309,8 @@ export function createConversionPlugin(config: ConversionPluginConfig): PuzzlePl
 		timerDuration: (d: number) => timerFromConfig(d, config.timerConfig, config.timerFallback),
 		generateRound: config.generateRound,
 		scoreForSolve: calculateScore,
-		shouldAdvance: (stats: RoundStats) => stats.consecutiveCorrect >= 3,
+		shouldAdvance: (stats: RoundStats) =>
+			stats.consecutiveCorrect >= Math.min(2 ** stats.difficulty, stats.difficulty + 2, 10),
 		shouldRegress: (stats: RoundStats) => stats.consecutiveWrong >= 2
 	};
 }

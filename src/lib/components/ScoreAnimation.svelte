@@ -3,13 +3,13 @@
 
 	let { breakdown }: { breakdown: ScoreBreakdown } = $props();
 
-	const timeSeconds = $derived(Math.round(breakdown.timeRemaining * 10) / 10);
-
 	interface AnimLine {
+		key: string;
 		text: string;
 		sub: string;
 		cls: string;
 		delay: number;
+		countdown?: { from: number; to: number; subFrom: number; duration: number };
 	}
 
 	const lines: AnimLine[] = $derived.by(() => {
@@ -18,34 +18,55 @@
 
 		if (breakdown.correct) {
 			result.push({
+				key: 'base',
 				text: `+${breakdown.basePoints}`,
 				sub: `${breakdown.difficultyLabel}`,
 				cls: 'line-base',
 				delay: d
 			});
-			d += 250;
+			d = 300;
 
 			if (breakdown.timeBonus > 0) {
 				result.push({
+					key: 'time',
 					text: `+${breakdown.timeBonus}`,
-					sub: `${timeSeconds}s remaining`,
+					sub: `${Math.round(breakdown.timeRemaining * 10) / 10}s remaining`,
 					cls: 'line-time',
+					delay: d,
+					countdown: {
+						from: 0,
+						to: breakdown.timeBonus,
+						subFrom: Math.round(breakdown.timeRemaining * 10) / 10,
+						duration: 300
+					}
+				});
+				d = 550;
+			}
+
+			if (breakdown.streakBonus > 0) {
+				result.push({
+					key: 'streak',
+					text: `+${breakdown.streakBonus}`,
+					sub: `×${breakdown.streakCount} STREAK`,
+					cls: 'line-streak',
 					delay: d
 				});
-				d += 250;
+				d += 150;
 			}
 
 			if (breakdown.multiplier > 1) {
 				result.push({
+					key: 'mult',
 					text: `\u00d72`,
 					sub: 'NO REFERENCE',
 					cls: 'line-mult',
 					delay: d
 				});
-				d += 300;
+				d += 150;
 			}
 
 			result.push({
+				key: 'total',
 				text: `${breakdown.total}`,
 				sub: '',
 				cls: 'line-total',
@@ -54,6 +75,7 @@
 		} else {
 			if (breakdown.total < 0) {
 				result.push({
+					key: 'penalty',
 					text: `${breakdown.total}`,
 					sub: 'PENALTY',
 					cls: 'line-penalty',
@@ -61,6 +83,7 @@
 				});
 			} else {
 				result.push({
+					key: 'miss',
 					text: `MISS`,
 					sub: '',
 					cls: 'line-miss',
@@ -71,16 +94,71 @@
 
 		return result;
 	});
+
+	// Countdown animation state for time bonus
+	let countdownText = $state('');
+	let countdownSub = $state('');
+	let countdownActive = $state(false);
+
+	$effect(() => {
+		const timeLine = lines.find((l) => l.countdown);
+		if (!timeLine?.countdown) {
+			countdownActive = false;
+			return;
+		}
+
+		const { from, to, subFrom, duration } = timeLine.countdown;
+		const lineDelay = timeLine.delay;
+		countdownActive = false;
+		countdownText = `+${from}`;
+		countdownSub = `${subFrom.toFixed(1)}s remaining`;
+
+		let rafId: number;
+		const timeoutId = setTimeout(() => {
+			countdownActive = true;
+			const startTime = performance.now();
+
+			function tick(now: number) {
+				const elapsed = now - startTime;
+				const t = Math.min(elapsed / duration, 1);
+				const currentPoints = Math.round(from + (to - from) * t);
+				const currentSeconds = subFrom - subFrom * t;
+				countdownText = `+${currentPoints}`;
+				countdownSub = `${currentSeconds.toFixed(1)}s remaining`;
+
+				if (t < 1) {
+					rafId = requestAnimationFrame(tick);
+				} else {
+					countdownText = `+${to}`;
+					countdownSub = `0.0s remaining`;
+				}
+			}
+
+			rafId = requestAnimationFrame(tick);
+		}, lineDelay);
+
+		return () => {
+			clearTimeout(timeoutId);
+			cancelAnimationFrame(rafId);
+		};
+	});
 </script>
 
 <div class="overlay" class:correct={breakdown.correct} class:wrong={!breakdown.correct}>
 	<div class="backdrop"></div>
 	<div class="anim-stack">
-		{#each lines as line, i (i)}
+		{#each lines as line (line.key)}
 			<div class="anim-line {line.cls}" style="animation-delay: {line.delay}ms">
-				<span class="line-text">{line.text}</span>
-				{#if line.sub}
-					<span class="line-sub">&nbsp;{line.sub}</span>
+				{#if line.countdown}
+					<span class="line-text">{countdownActive ? countdownText : line.text}</span>
+					<span class="line-sub"
+						>&nbsp;{countdownActive ? countdownSub : line.sub}</span
+					>
+				{:else}
+					<span class="line-text">{line.text}</span>
+					{#if line.sub}
+						<span class="line-sub">&nbsp;{line.sub}</span>
+					{/if}
 				{/if}
 			</div>
 		{/each}
@@ -113,9 +191,15 @@
 	}
 
 	@keyframes fade-backdrop {
-		0% { opacity: 0; }
-		15% { opacity: 1; }
-		100% { opacity: 1; }
+		0% {
+			opacity: 0;
+		}
+		15% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 1;
+		}
 	}
 
 	.anim-stack {
@@ -170,6 +254,19 @@
 	.line-time .line-sub {
 		font-size: 1rem;
 		color: rgba(52, 211, 153, 0.7);
+	}
+
+	.line-streak .line-text {
+		font-size: 2.2rem;
+		color: #fbbf24;
+		text-shadow:
+			0 0 20px rgba(251, 191, 36, 0.8),
+			0 0 50px rgba(251, 191, 36, 0.4);
+	}
+	.line-streak .line-sub {
+		font-size: 1rem;
+		color: rgba(251, 191, 36, 0.7);
+		letter-spacing: 0.12em;
 	}
 
 	.line-mult {
