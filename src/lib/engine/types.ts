@@ -6,6 +6,7 @@ export interface RoundStats {
 	totalCorrect: number;
 	totalWrong: number;
 	roundsPlayed: number;
+	difficulty: number;
 }
 
 export type NumberBase = 'binary' | 'octal' | 'decimal' | 'hex' | 'ascii';
@@ -23,7 +24,8 @@ export interface PuzzlePlugin {
 	name: string;
 	description: string;
 	icon: string;
-	component: Component;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	component: Component<any>;
 	minDifficulty: number;
 	maxDifficulty: number;
 	difficultyLabel(level: number): string;
@@ -45,7 +47,7 @@ export interface ScoreBreakdown {
 	difficultyLabel: string;
 }
 
-export type GamePhase = 'ready' | 'playing' | 'answered' | 'done';
+export type GamePhase = 'ready' | 'playing' | 'answered' | 'level-up' | 'done';
 export type GameMode = 'sprint' | 'marathon' | 'untimed';
 
 export interface GameSession {

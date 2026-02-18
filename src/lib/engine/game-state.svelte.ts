@@ -16,6 +16,7 @@ export class GameState {
 	lastAnswerCorrect = $state<boolean | null>(null);
 	lastScore = $state(0);
 	lastBreakdown = $state<ScoreBreakdown | null>(null);
+	lastAdvanced = $state(false);
 	referenceVisible = $state(false);
 	scoreMultiplier = $derived(this.referenceVisible ? 1 : 2);
 
@@ -48,6 +49,7 @@ export class GameState {
 		this.lastAnswerCorrect = null;
 		this.lastScore = 0;
 		this.lastBreakdown = null;
+		this.lastAdvanced = false;
 		this.phase = 'playing';
 
 		if (this.mode === 'untimed') {
@@ -59,7 +61,7 @@ export class GameState {
 	}
 
 	toggleReference() {
-		if (this.phase === 'playing' || this.phase === 'answered') {
+		if (this.phase === 'playing' || this.phase === 'answered' || this.phase === 'level-up') {
 			this.referenceVisible = !this.referenceVisible;
 		}
 	}
@@ -99,11 +101,15 @@ export class GameState {
 			if (this.plugin.shouldAdvance(stats) && this.difficulty < this.plugin.maxDifficulty) {
 				this.difficulty++;
 				this.consecutiveCorrect = 0;
+				this.lastAdvanced = true;
+			} else {
+				this.lastAdvanced = false;
 			}
 			if (this.difficulty > this.maxDifficulty) {
 				this.maxDifficulty = this.difficulty;
 			}
 		} else {
+			this.lastAdvanced = false;
 			this.handleWrong();
 		}
 
@@ -164,6 +170,10 @@ export class GameState {
 		}
 	}
 
+	showLevelUp() {
+		this.phase = 'level-up';
+	}
+
 	endGame() {
 		this.timer.stop();
 		this.phase = 'done';
@@ -175,7 +185,8 @@ export class GameState {
 			consecutiveWrong: this.consecutiveWrong,
 			totalCorrect: this.totalCorrect,
 			totalWrong: this.totalWrong,
-			roundsPlayed: this.roundsPlayed
+			roundsPlayed: this.roundsPlayed,
+			difficulty: this.difficulty
 		};
 	}
 

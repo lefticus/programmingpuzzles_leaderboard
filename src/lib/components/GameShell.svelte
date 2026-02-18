@@ -8,6 +8,7 @@
 	import Leaderboard from './Leaderboard.svelte';
 	import ReferenceTable from './ReferenceTable.svelte';
 	import ScoreAnimation from './ScoreAnimation.svelte';
+	import LevelUpEffect from './LevelUpEffect.svelte';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 
@@ -20,7 +21,7 @@
 	let submitError = $state('');
 
 	const canAdvance = $derived(
-		gameState.phase === 'answered' &&
+		(gameState.phase === 'answered' || gameState.phase === 'level-up') &&
 		!(gameState.mode === 'sprint' && gameState.consecutiveWrong >= 3)
 	);
 
@@ -34,10 +35,18 @@
 		untimed: 'Untimed'
 	};
 
+	function advanceOrCelebrate() {
+		if (gameState.phase === 'answered' && gameState.lastAdvanced) {
+			gameState.showLevelUp();
+		} else {
+			gameState.nextRound();
+		}
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && canAdvance) {
 			e.preventDefault();
-			gameState.nextRound();
+			advanceOrCelebrate();
 		}
 	}
 
@@ -104,7 +113,7 @@
 				</button>
 			</div>
 		</div>
-	{:else if gameState.phase === 'playing' || gameState.phase === 'answered'}
+	{:else if gameState.phase === 'playing' || gameState.phase === 'answered' || gameState.phase === 'level-up'}
 		<div class="game-area">
 			<div class="top-bar">
 				<div class="mode-badge">{modeLabels[gameState.mode]}</div>
@@ -134,11 +143,14 @@
 						<ScoreAnimation breakdown={gameState.lastBreakdown} />
 					{/key}
 				{/if}
+				{#if gameState.phase === 'level-up'}
+					<LevelUpEffect label={gameState.plugin.difficultyLabel(gameState.difficulty)} />
+				{/if}
 			</div>
 			<div class="game-controls">
 				{#if canAdvance}
-					<button class="btn btn-primary" onclick={() => gameState.nextRound()}>
-						Next Round
+					<button class="btn btn-primary" onclick={() => advanceOrCelebrate()}>
+						{gameState.phase === 'level-up' ? 'Continue' : 'Next Round'}
 					</button>
 				{/if}
 				<button class="btn btn-danger" onclick={() => gameState.endGame()}>
