@@ -10,6 +10,7 @@
 	import ScoreAnimation from './ScoreAnimation.svelte';
 	import LevelUpEffect from './LevelUpEffect.svelte';
 	import { explainConversion } from '$lib/puzzles/explain';
+	import { explainExpression } from '$lib/puzzles/expression-engine';
 	import BookPromo from './BookPromo.svelte';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
@@ -18,6 +19,7 @@
 
 	const gameState = new GameState(() => plugin);
 	const refVariant = $derived(plugin.slug.includes('ascii') ? 'ascii' : 'numeric' as const);
+	const isExpressionPuzzle = $derived(plugin.slug === 'rpn-eval' || plugin.slug === 'sexpr-eval');
 	let submitting = $state(false);
 	let submitted = $state(false);
 	let submitError = $state('');
@@ -27,7 +29,12 @@
 	const explanationLines = $derived.by(() => {
 		if (gameState.phase !== 'answered' || gameState.lastAnswerCorrect) return [];
 		const r = gameState.currentRound;
-		if (!r?.promptType || !r.answerType || !r.displayPrompt) return [];
+		if (!r?.displayPrompt) return [];
+		if (isExpressionPuzzle) {
+			const format = plugin.slug === 'rpn-eval' ? 'rpn' : 'sexpr';
+			return explainExpression(r.displayPrompt, format);
+		}
+		if (!r.promptType || !r.answerType) return [];
 		return explainConversion(r.promptType, r.answerType, r.answer, r.displayPrompt, gameState.difficulty);
 	});
 
@@ -204,26 +211,28 @@
 			<div class="game-area">
 				<div class="top-bar">
 					<div class="mode-badge">{modeLabels[gameState.mode]}</div>
-					<button
-						class="ref-toggle btn btn-secondary"
-						class:active={gameState.referenceVisible}
-						onclick={() => gameState.toggleReference()}
-						disabled={!canToggleRef && gameState.phase !== 'starting'}
-						title={!canToggleRef && gameState.phase !== 'starting' ? 'Locked during puzzle' : ''}
-					>
-						{#if canToggleRef || gameState.phase === 'starting'}
-							{gameState.referenceVisible ? 'Hide Table' : 'Show Table'}
-							<span class="multiplier-hint" class:is-boosted={!gameState.referenceVisible}>
-								{gameState.referenceVisible ? '(1x)' : '(2x)'}
-							</span>
-							<kbd class="ref-kbd">r</kbd>
-						{:else}
-							{gameState.referenceVisible ? 'Table Shown' : 'Table Hidden'}
-							<span class="multiplier-hint" class:is-boosted={!gameState.referenceVisible}>
-								{gameState.referenceVisible ? '(1x)' : '(2x)'}
-							</span>
-						{/if}
-					</button>
+					{#if !isExpressionPuzzle}
+						<button
+							class="ref-toggle btn btn-secondary"
+							class:active={gameState.referenceVisible}
+							onclick={() => gameState.toggleReference()}
+							disabled={!canToggleRef && gameState.phase !== 'starting'}
+							title={!canToggleRef && gameState.phase !== 'starting' ? 'Locked during puzzle' : ''}
+						>
+							{#if canToggleRef || gameState.phase === 'starting'}
+								{gameState.referenceVisible ? 'Hide Table' : 'Show Table'}
+								<span class="multiplier-hint" class:is-boosted={!gameState.referenceVisible}>
+									{gameState.referenceVisible ? '(1x)' : '(2x)'}
+								</span>
+								<kbd class="ref-kbd">r</kbd>
+							{:else}
+								{gameState.referenceVisible ? 'Table Shown' : 'Table Hidden'}
+								<span class="multiplier-hint" class:is-boosted={!gameState.referenceVisible}>
+									{gameState.referenceVisible ? '(1x)' : '(2x)'}
+								</span>
+							{/if}
+						</button>
+					{/if}
 				</div>
 				{#if gameState.mode !== 'untimed' && gameState.phase !== 'starting'}
 					<Timer timer={gameState.timer} />
@@ -262,7 +271,7 @@
 					</div>
 				{/if}
 			</div>
-			{#if gameState.referenceVisible}
+			{#if !isExpressionPuzzle && gameState.referenceVisible}
 				<aside class="ref-sidebar">
 					<ReferenceTable variant={refVariant} />
 				</aside>

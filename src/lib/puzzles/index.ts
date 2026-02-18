@@ -10,6 +10,8 @@ import { asciiDecimalPlugin } from './ascii-decimal/plugin';
 import { asciiHexPlugin } from './ascii-hex/plugin';
 import { asciiOctalPlugin } from './ascii-octal/plugin';
 import { numericMixedPlugin } from './numeric-mixed/plugin';
+import { rpnEvalPlugin } from './rpn-eval/plugin';
+import { sexprEvalPlugin } from './sexpr-eval/plugin';
 
 registerPuzzle(binaryDecimalPlugin);
 registerPuzzle(hexBinaryPlugin);
@@ -22,3 +24,5 @@ registerPuzzle(asciiDecimalPlugin);
 registerPuzzle(asciiHexPlugin);
 registerPuzzle(asciiOctalPlugin);
 registerPuzzle(numericMixedPlugin);
+registerPuzzle(rpnEvalPlugin);
+registerPuzzle(sexprEvalPlugin);

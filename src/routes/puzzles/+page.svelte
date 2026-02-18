@@ -61,6 +61,23 @@
 		return slug ? getPuzzle(slug) : undefined;
 	}
 
+	function handleExprKeydown(e: KeyboardEvent) {
+		if (e.altKey || e.ctrlKey || e.metaKey) return;
+		const cards = [...document.querySelectorAll('.expr-card')] as HTMLElement[];
+		const idx = cards.indexOf(e.currentTarget as HTMLElement);
+
+		if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			(document.querySelector('.mixed-card') as HTMLElement)?.focus();
+		} else if (e.key === 'ArrowLeft' && idx > 0) {
+			e.preventDefault();
+			cards[idx - 1].focus();
+		} else if (e.key === 'ArrowRight' && idx < cards.length - 1) {
+			e.preventDefault();
+			cards[idx + 1].focus();
+		}
+	}
+
 	function handleGridKeydown(e: KeyboardEvent) {
 		if (e.altKey || e.ctrlKey || e.metaKey) return;
 		const dirs: Record<string, [number, number]> = {
@@ -165,12 +182,31 @@
 				e.preventDefault();
 				const last = document.querySelector('.grid-cell[data-row="4"][data-col="3"]') as HTMLElement | null;
 				last?.focus();
+			} else if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				(document.querySelector('.expr-card') as HTMLElement)?.focus();
 			}
 		}}
 	>
 		<span class="mixed-title">Numeric Mixed</span>
 		<span class="mixed-desc">Random mix of binary, octal, decimal &amp; hex conversions</span>
 	</a>
+
+	<h2 class="section-header">Expression Puzzles</h2>
+	<p class="section-subtitle">Evaluate arithmetic expressions in different notations</p>
+
+	<div class="expr-grid">
+		<a href="{base}/puzzles/rpn-eval/" class="expr-card" onkeydown={handleExprKeydown}>
+			<span class="expr-title">RPN Evaluation</span>
+			<span class="expr-example mono">3 4 + 2 *</span>
+			<span class="expr-desc">Evaluate postfix (Reverse Polish) notation expressions</span>
+		</a>
+		<a href="{base}/puzzles/sexpr-eval/" class="expr-card" onkeydown={handleExprKeydown}>
+			<span class="expr-title">S-Expression Evaluation</span>
+			<span class="expr-example mono">(* (+ 3 4) 2)</span>
+			<span class="expr-desc">Evaluate prefix S-expression notation expressions</span>
+		</a>
+	</div>
 </div>
 
 <style>
@@ -345,5 +381,69 @@
 	.mixed-desc {
 		font-size: 0.8rem;
 		color: var(--text-muted);
+	}
+
+	/* Expression Puzzles section */
+	.section-header {
+		margin-top: 2.5rem;
+		margin-bottom: 0.5rem;
+		font-size: 1.3rem;
+	}
+
+	.section-subtitle {
+		color: var(--text-muted);
+		font-size: 0.9rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.expr-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+
+	.expr-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 1.25rem 1rem;
+		background: var(--bg-surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		text-decoration: none;
+		color: var(--text);
+		transition: all 0.15s;
+	}
+
+	.expr-card:hover,
+	.expr-card:focus-visible {
+		border-color: var(--accent);
+		background: var(--bg-elevated);
+		transform: scale(1.02);
+		text-decoration: none;
+		outline: none;
+		box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(34, 211, 238, 0.3);
+	}
+
+	.expr-title {
+		font-family: var(--font-mono);
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: var(--accent);
+	}
+
+	.expr-example {
+		font-size: 1.1rem;
+		font-weight: 600;
+		color: var(--text);
+		letter-spacing: 0.05em;
+	}
+
+	.expr-desc {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		text-align: center;
 	}
 </style>
