@@ -16,6 +16,7 @@ export interface PuzzleRound {
 	answer: string;
 	displayPrompt?: string;
 	answerType?: NumberBase;
+	promptType?: NumberBase;
 	promptLabel?: string;
 }
 

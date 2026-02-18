@@ -124,6 +124,7 @@ export function generateConversionRound(
 		answer: answerForBase(value, toBase, bits),
 		displayPrompt: formatForBase(value, fromBase, bits),
 		answerType: toBase,
+		promptType: fromBase,
 		promptLabel: `Convert to ${baseLabels[toBase]}`
 	};
 }
@@ -248,6 +249,7 @@ export function generateAsciiConversionRound(
 			answer,
 			displayPrompt: letterStr,
 			answerType: otherBase,
+			promptType: 'ascii',
 			promptLabel: `Convert to ${baseLabels[otherBase]}`
 		};
 	} else {
@@ -258,6 +260,7 @@ export function generateAsciiConversionRound(
 			answer: letterStr,
 			displayPrompt: display,
 			answerType: 'ascii',
+			promptType: otherBase,
 			promptLabel: `Convert to ${baseLabels.ascii}`
 		};
 	}

@@ -9,6 +9,7 @@
 	import ReferenceTable from './ReferenceTable.svelte';
 	import ScoreAnimation from './ScoreAnimation.svelte';
 	import LevelUpEffect from './LevelUpEffect.svelte';
+	import { explainConversion } from '$lib/puzzles/explain';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 
@@ -21,6 +22,13 @@
 	let submitError = $state('');
 	let puzzleAreaEl = $state<HTMLDivElement | null>(null);
 	let puzzleAreaMinHeight = $state(0);
+
+	const explanationLines = $derived.by(() => {
+		if (gameState.phase !== 'answered' || gameState.lastAnswerCorrect) return [];
+		const r = gameState.currentRound;
+		if (!r?.promptType || !r.answerType || !r.displayPrompt) return [];
+		return explainConversion(r.promptType, r.answerType, r.answer, r.displayPrompt, gameState.difficulty);
+	});
 
 	const canAdvance = $derived(
 		(gameState.phase === 'answered' || gameState.phase === 'level-up') &&
@@ -232,7 +240,7 @@
 						<PuzzleComponent {gameState} />
 						{#if gameState.phase === 'answered' && gameState.lastBreakdown}
 							{#key gameState.roundsPlayed}
-								<ScoreAnimation breakdown={gameState.lastBreakdown} />
+								<ScoreAnimation breakdown={gameState.lastBreakdown} explanation={explanationLines} />
 							{/key}
 						{/if}
 						{#if gameState.phase === 'level-up'}

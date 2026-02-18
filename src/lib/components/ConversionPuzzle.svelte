@@ -2,7 +2,6 @@
 	import type { GameState } from '$lib/engine/game-state.svelte';
 	import type { NumberBase } from '$lib/engine/types';
 	import { formatForBase } from '$lib/puzzles/shared';
-
 	let { gameState }: { gameState: GameState } = $props();
 	let userAnswer = $state('');
 	let inputEl = $state<HTMLInputElement | null>(null);
@@ -177,4 +176,5 @@
 		color: var(--text-muted);
 		font-size: 0.95rem;
 	}
+
 </style>

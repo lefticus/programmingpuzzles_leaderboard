@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ScoreBreakdown } from '$lib/engine/types';
 
-	let { breakdown }: { breakdown: ScoreBreakdown } = $props();
+	let { breakdown, explanation = [] }: { breakdown: ScoreBreakdown; explanation?: string[] } = $props();
 
 	interface AnimLine {
 		key: string;
@@ -162,6 +162,13 @@
 				{/if}
 			</div>
 		{/each}
+		{#if explanation.length > 0}
+			<div class="explain-block" style="animation-delay: 400ms">
+				{#each explanation as line}
+					<div class="explain-line">{line}</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -322,6 +329,22 @@
 		animation-name: shake-in !important;
 		animation-duration: 0.65s !important;
 		animation-timing-function: ease-out !important;
+	}
+
+	/* --- Explanation lines (wrong answers) --- */
+	.explain-block {
+		margin-top: 0.6rem;
+		opacity: 0;
+		animation: pop-in 0.5s ease-out forwards;
+		text-align: center;
+	}
+
+	.explain-line {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: rgba(255, 255, 255, 0.55);
+		line-height: 1.5;
+		letter-spacing: 0.03em;
 	}
 
 	/* --- Keyframes --- */
