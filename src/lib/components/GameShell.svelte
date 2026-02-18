@@ -48,16 +48,33 @@
 		const tag = (e.target as HTMLElement)?.tagName;
 		if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
+		if (gameState.phase === 'starting') {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				gameState.nextRound();
+			} else if (e.key === 'Backspace') {
+				e.preventDefault();
+				gameState.phase = 'ready';
+			} else if (e.key === 'r') {
+				gameState.toggleReference();
+			}
+			return;
+		}
+
 		if (e.key === 'Enter' && canAdvance) {
 			e.preventDefault();
 			advanceOrCelebrate();
 		}
 
-		// Mode selection: 1/2/3 on ready screen
+		// Mode selection: 1/2/3 on ready screen, Backspace to go back
 		if (gameState.phase === 'ready') {
 			if (e.key === '1') startWithMode('sprint');
 			else if (e.key === '2') startWithMode('marathon');
 			else if (e.key === '3') startWithMode('untimed');
+			else if (e.key === 'Backspace') {
+				e.preventDefault();
+				window.history.back();
+			}
 		}
 
 		// Reference toggle: r
@@ -88,6 +105,8 @@
 		requestAnimationFrame(() => {
 			if (phase === 'ready') {
 				(document.querySelector('.mode-card') as HTMLElement)?.focus();
+			} else if (phase === 'starting') {
+				(document.querySelector('.start-btn') as HTMLElement)?.focus();
 			} else if (phase === 'answered' || phase === 'level-up') {
 				(document.querySelector('.game-controls .btn-primary') as HTMLElement)?.focus();
 			} else if (phase === 'done') {
@@ -123,6 +142,7 @@
 	}
 
 	function arrowNav(e: KeyboardEvent, selector: string) {
+		if (e.altKey || e.ctrlKey || e.metaKey) return;
 		const next = e.key === 'ArrowRight' || e.key === 'ArrowDown';
 		const prev = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
 		if (!next && !prev) return;
@@ -162,7 +182,7 @@
 				</button>
 			</div>
 		</div>
-	{:else if gameState.phase === 'playing' || gameState.phase === 'answered' || gameState.phase === 'level-up'}
+	{:else if gameState.phase === 'starting' || gameState.phase === 'playing' || gameState.phase === 'answered' || gameState.phase === 'level-up'}
 		<div class="game-layout" class:ref-open={gameState.referenceVisible}>
 			<div class="game-area">
 				<div class="top-bar">
@@ -171,10 +191,10 @@
 						class="ref-toggle btn btn-secondary"
 						class:active={gameState.referenceVisible}
 						onclick={() => gameState.toggleReference()}
-						disabled={!canToggleRef}
-						title={!canToggleRef ? 'Locked during puzzle' : ''}
+						disabled={!canToggleRef && gameState.phase !== 'starting'}
+						title={!canToggleRef && gameState.phase !== 'starting' ? 'Locked during puzzle' : ''}
 					>
-						{#if canToggleRef}
+						{#if canToggleRef || gameState.phase === 'starting'}
 							{gameState.referenceVisible ? 'Hide Table' : 'Show Table'}
 							<span class="multiplier-hint">
 								{gameState.referenceVisible ? '(1x)' : '(2x)'}
@@ -185,31 +205,42 @@
 						{/if}
 					</button>
 				</div>
-				{#if gameState.mode !== 'untimed'}
+				{#if gameState.mode !== 'untimed' && gameState.phase !== 'starting'}
 					<Timer timer={gameState.timer} />
 				{/if}
 				<ScoreDisplay {gameState} />
 				<div class="puzzle-area">
-					<PuzzleComponent {gameState} />
-					{#if gameState.phase === 'answered' && gameState.lastBreakdown}
-						{#key gameState.roundsPlayed}
-							<ScoreAnimation breakdown={gameState.lastBreakdown} />
-						{/key}
-					{/if}
-					{#if gameState.phase === 'level-up'}
-						<LevelUpEffect label={gameState.plugin.difficultyLabel(gameState.difficulty)} />
+					{#if gameState.phase === 'starting'}
+						<div class="begin-prompt">
+							<button class="start-btn btn btn-primary" onclick={() => gameState.nextRound()}>
+								Begin
+							</button>
+							<div class="starting-hint">Press Enter to start</div>
+						</div>
+					{:else}
+						<PuzzleComponent {gameState} />
+						{#if gameState.phase === 'answered' && gameState.lastBreakdown}
+							{#key gameState.roundsPlayed}
+								<ScoreAnimation breakdown={gameState.lastBreakdown} />
+							{/key}
+						{/if}
+						{#if gameState.phase === 'level-up'}
+							<LevelUpEffect label={gameState.plugin.difficultyLabel(gameState.difficulty)} />
+						{/if}
 					{/if}
 				</div>
-				<div class="game-controls">
-					{#if canAdvance}
-						<button class="btn btn-primary" onclick={() => advanceOrCelebrate()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
-							{gameState.phase === 'level-up' ? 'Continue' : 'Next Round'}
+				{#if gameState.phase !== 'starting'}
+					<div class="game-controls">
+						{#if canAdvance}
+							<button class="btn btn-primary" onclick={() => advanceOrCelebrate()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
+								{gameState.phase === 'level-up' ? 'Continue' : 'Next Round'}
+							</button>
+						{/if}
+						<button class="btn btn-danger" onclick={() => gameState.endGame()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
+							End Game
 						</button>
-					{/if}
-					<button class="btn btn-danger" onclick={() => gameState.endGame()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
-						End Game
-					</button>
-				</div>
+					</div>
+				{/if}
 			</div>
 			{#if gameState.referenceVisible}
 				<aside class="ref-sidebar">
@@ -330,6 +361,24 @@
 
 	.game-header h2 {
 		font-size: 1.5rem;
+	}
+
+	.begin-prompt {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		padding: 2rem 0;
+	}
+
+	.start-btn {
+		padding: 0.8rem 2.5rem;
+		font-size: 1.1rem;
+	}
+
+	.starting-hint {
+		font-size: 0.8rem;
+		color: var(--text-dim);
 	}
 
 	.ready-screen {

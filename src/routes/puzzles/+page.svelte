@@ -61,6 +61,7 @@
 	}
 
 	function handleGridKeydown(e: KeyboardEvent) {
+		if (e.altKey || e.ctrlKey || e.metaKey) return;
 		const dirs: Record<string, [number, number]> = {
 			ArrowUp: [-1, 0],
 			ArrowDown: [1, 0],
@@ -156,6 +157,7 @@
 		href="{base}/puzzles/numeric-mixed/"
 		class="mixed-card"
 		onkeydown={(e) => {
+			if (e.altKey || e.ctrlKey || e.metaKey) return;
 			if (e.key === 'ArrowUp') {
 				e.preventDefault();
 				const last = document.querySelector('.grid-cell[data-row="4"][data-col="3"]') as HTMLElement | null;

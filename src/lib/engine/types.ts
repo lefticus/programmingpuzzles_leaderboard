@@ -49,7 +49,7 @@ export interface ScoreBreakdown {
 	difficultyLabel: string;
 }
 
-export type GamePhase = 'ready' | 'playing' | 'answered' | 'level-up' | 'done';
+export type GamePhase = 'ready' | 'starting' | 'playing' | 'answered' | 'level-up' | 'done';
 export type GameMode = 'sprint' | 'marathon' | 'untimed';
 
 export interface GameSession {

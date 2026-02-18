@@ -10,6 +10,7 @@
 	});
 
 	function ctaArrow(e: KeyboardEvent) {
+		if (e.altKey || e.ctrlKey || e.metaKey) return;
 		const isArrow = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key);
 		if (!isArrow) return;
 		e.preventDefault();

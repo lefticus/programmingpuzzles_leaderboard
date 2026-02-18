@@ -43,7 +43,7 @@ export class GameState {
 		this.totalCorrect = 0;
 		this.totalWrong = 0;
 		this.seen.clear();
-		this.nextRound();
+		this.phase = 'starting';
 	}
 
 	nextRound() {
@@ -63,7 +63,7 @@ export class GameState {
 	}
 
 	toggleReference() {
-		if (this.phase === 'playing' || this.phase === 'answered' || this.phase === 'level-up') {
+		if (this.phase === 'starting' || this.phase === 'playing' || this.phase === 'answered' || this.phase === 'level-up') {
 			this.referenceVisible = !this.referenceVisible;
 		}
 	}
