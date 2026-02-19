@@ -3,14 +3,33 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 
+	let method = $state<'magic' | 'password'>('magic');
 	let mode = $state<'signin' | 'signup'>('signin');
 	let email = $state('');
 	let password = $state('');
 	let displayName = $state('');
 	let error = $state('');
 	let loading = $state(false);
+	let magicLinkSent = $state(false);
 
-	async function handleSubmit(e: Event) {
+	async function handleMagicLink(e: Event) {
+		e.preventDefault();
+		error = '';
+		loading = true;
+
+		try {
+			const { error: err } = await auth.signInWithMagicLink(email);
+			if (err) {
+				error = err.message;
+			} else {
+				magicLinkSent = true;
+			}
+		} finally {
+			loading = false;
+		}
+	}
+
+	async function handlePassword(e: Event) {
 		e.preventDefault();
 		error = '';
 		loading = true;
@@ -36,58 +55,97 @@
 </script>
 
 <svelte:head>
-	<title>{mode === 'signin' ? 'Sign In' : 'Sign Up'} — Puzzle Games</title>
+	<title>Sign In — Puzzle Games</title>
 </svelte:head>
 
 <div class="login-page">
 	<div class="login-card card">
-		<h2>{mode === 'signin' ? 'Sign In' : 'Create Account'}</h2>
+		<h2>Sign In</h2>
 
 		{#if error}
 			<div class="error-msg">{error}</div>
 		{/if}
 
-		<form onsubmit={handleSubmit}>
-			{#if mode === 'signup'}
-				<label class="field">
-					<span>Display Name</span>
-					<input type="text" bind:value={displayName} required placeholder="PlayerOne" />
-				</label>
-			{/if}
+		{#if magicLinkSent}
+			<div class="success-msg">
+				Check your email for a sign-in link! You can close this page.
+			</div>
+		{:else}
+			<!-- Method toggle -->
+			<div class="method-toggle">
+				<button
+					class="method-btn"
+					class:active={method === 'magic'}
+					onclick={() => method = 'magic'}
+				>Email Link</button>
+				<button
+					class="method-btn"
+					class:active={method === 'password'}
+					onclick={() => method = 'password'}
+				>Password</button>
+			</div>
 
-			<label class="field">
-				<span>Email</span>
-				<input type="email" bind:value={email} required placeholder="you@example.com" />
-			</label>
+			{#if method === 'magic'}
+				<form onsubmit={handleMagicLink}>
+					<label class="field">
+						<span>Email</span>
+						<input type="email" bind:value={email} required placeholder="you@example.com" />
+					</label>
 
-			<label class="field">
-				<span>Password</span>
-				<input type="password" bind:value={password} required minlength="6" placeholder="••••••••" />
-			</label>
+					<button type="submit" class="btn btn-primary full-width" disabled={loading}>
+						{loading ? 'Sending...' : 'Send Sign-In Link'}
+					</button>
+				</form>
 
-			<button type="submit" class="btn btn-primary full-width" disabled={loading}>
-				{loading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
-			</button>
-		</form>
-
-		<div class="divider"><span>or</span></div>
-
-		<div class="oauth-buttons">
-			<button class="btn btn-secondary full-width" onclick={() => handleOAuth('github')}>
-				Continue with GitHub
-			</button>
-			<button class="btn btn-secondary full-width" onclick={() => handleOAuth('google')}>
-				Continue with Google
-			</button>
-		</div>
-
-		<p class="toggle-mode">
-			{#if mode === 'signin'}
-				Don't have an account? <button class="link-btn" onclick={() => mode = 'signup'}>Sign up</button>
+				<p class="method-hint">We'll email you a link — no password needed.</p>
 			{:else}
-				Already have an account? <button class="link-btn" onclick={() => mode = 'signin'}>Sign in</button>
+				{#if mode === 'signup'}
+					<p class="method-hint">Create an account with email and password.</p>
+				{/if}
+
+				<form onsubmit={handlePassword}>
+					{#if mode === 'signup'}
+						<label class="field">
+							<span>Display Name</span>
+							<input type="text" bind:value={displayName} required placeholder="PlayerOne" />
+						</label>
+					{/if}
+
+					<label class="field">
+						<span>Email</span>
+						<input type="email" bind:value={email} required placeholder="you@example.com" />
+					</label>
+
+					<label class="field">
+						<span>Password</span>
+						<input type="password" bind:value={password} required minlength="6" placeholder="••••••••" />
+					</label>
+
+					<button type="submit" class="btn btn-primary full-width" disabled={loading}>
+						{loading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+					</button>
+				</form>
+
+				<p class="toggle-mode">
+					{#if mode === 'signin'}
+						Don't have an account? <button class="link-btn" onclick={() => mode = 'signup'}>Sign up</button>
+					{:else}
+						Already have an account? <button class="link-btn" onclick={() => mode = 'signin'}>Sign in</button>
+					{/if}
+				</p>
 			{/if}
-		</p>
+
+			<div class="divider"><span>or</span></div>
+
+			<div class="oauth-buttons">
+				<button class="btn btn-secondary full-width" onclick={() => handleOAuth('github')}>
+					Continue with GitHub
+				</button>
+				<button class="btn btn-secondary full-width" onclick={() => handleOAuth('google')}>
+					Continue with Google
+				</button>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -106,6 +164,38 @@
 	.login-card h2 {
 		text-align: center;
 		margin-bottom: 1.5rem;
+	}
+
+	.method-toggle {
+		display: flex;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+		margin-bottom: 1.25rem;
+	}
+
+	.method-btn {
+		flex: 1;
+		padding: 0.5rem;
+		font-size: 0.85rem;
+		font-weight: 500;
+		color: var(--text-muted);
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.method-btn.active {
+		background: var(--accent);
+		color: var(--bg);
+	}
+
+	.method-hint {
+		text-align: center;
+		color: var(--text-dim);
+		font-size: 0.8rem;
+		margin-top: 0.75rem;
 	}
 
 	.field {
@@ -169,9 +259,19 @@
 		margin-bottom: 1rem;
 	}
 
+	.success-msg {
+		background: #16653433;
+		border: 1px solid #166534;
+		color: #4ade80;
+		padding: 1rem;
+		border-radius: var(--radius);
+		font-size: 0.95rem;
+		text-align: center;
+	}
+
 	.toggle-mode {
 		text-align: center;
-		margin-top: 1.25rem;
+		margin-top: 0.75rem;
 		color: var(--text-muted);
 		font-size: 0.85rem;
 	}

@@ -28,6 +28,13 @@ class AuthState {
 		});
 	}
 
+	async signInWithMagicLink(email: string) {
+		return supabase.auth.signInWithOtp({
+			email,
+			options: { emailRedirectTo: window.location.origin }
+		});
+	}
+
 	async signInWithEmail(email: string, password: string) {
 		return supabase.auth.signInWithPassword({ email, password });
 	}
