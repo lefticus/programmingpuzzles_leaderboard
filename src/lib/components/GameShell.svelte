@@ -11,6 +11,8 @@
 	import LevelUpEffect from './LevelUpEffect.svelte';
 	import { explainConversion } from '$lib/puzzles/explain';
 	import { explainExpression } from '$lib/puzzles/expression-engine';
+	import { explainBool } from '$lib/puzzles/bool-engine';
+	import { explainBinaryAdd } from '$lib/puzzles/binary-add-engine';
 	import BookPromo from './BookPromo.svelte';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
@@ -19,7 +21,10 @@
 
 	const gameState = new GameState(() => plugin);
 	const refVariant = $derived(plugin.slug.includes('ascii') ? 'ascii' : 'numeric' as const);
-	const isExpressionPuzzle = $derived(plugin.slug === 'rpn-eval' || plugin.slug === 'sexpr-eval');
+	const isNonConversionPuzzle = $derived(
+		plugin.slug === 'rpn-eval' || plugin.slug === 'sexpr-eval' ||
+		plugin.slug === 'truth-table' || plugin.slug === 'binary-add'
+	);
 	let submitting = $state(false);
 	let submitted = $state(false);
 	let submitError = $state('');
@@ -30,9 +35,15 @@
 		if (gameState.phase !== 'answered' || gameState.lastAnswerCorrect) return [];
 		const r = gameState.currentRound;
 		if (!r?.displayPrompt) return [];
-		if (isExpressionPuzzle) {
+		if (plugin.slug === 'rpn-eval' || plugin.slug === 'sexpr-eval') {
 			const format = plugin.slug === 'rpn-eval' ? 'rpn' : 'sexpr';
 			return explainExpression(r.displayPrompt, format);
+		}
+		if (plugin.slug === 'truth-table') {
+			return explainBool(r.displayPrompt, r.promptLabel ?? '');
+		}
+		if (plugin.slug === 'binary-add') {
+			return explainBinaryAdd(r.displayPrompt);
 		}
 		if (!r.promptType || !r.answerType) return [];
 		return explainConversion(r.promptType, r.answerType, r.answer, r.displayPrompt, gameState.difficulty);
@@ -211,7 +222,7 @@
 			<div class="game-area">
 				<div class="top-bar">
 					<div class="mode-badge">{modeLabels[gameState.mode]}</div>
-					{#if !isExpressionPuzzle}
+					{#if !isNonConversionPuzzle}
 						<button
 							class="ref-toggle btn btn-secondary"
 							class:active={gameState.referenceVisible}
@@ -271,7 +282,7 @@
 					</div>
 				{/if}
 			</div>
-			{#if !isExpressionPuzzle && gameState.referenceVisible}
+			{#if !isNonConversionPuzzle && gameState.referenceVisible}
 				<aside class="ref-sidebar">
 					<ReferenceTable variant={refVariant} />
 				</aside>

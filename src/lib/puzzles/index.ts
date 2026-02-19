@@ -12,6 +12,8 @@ import { asciiOctalPlugin } from './ascii-octal/plugin';
 import { numericMixedPlugin } from './numeric-mixed/plugin';
 import { rpnEvalPlugin } from './rpn-eval/plugin';
 import { sexprEvalPlugin } from './sexpr-eval/plugin';
+import { truthTablePlugin } from './truth-table/plugin';
+import { binaryAddPlugin } from './binary-add/plugin';
 
 registerPuzzle(binaryDecimalPlugin);
 registerPuzzle(hexBinaryPlugin);
@@ -26,3 +28,5 @@ registerPuzzle(asciiOctalPlugin);
 registerPuzzle(numericMixedPlugin);
 registerPuzzle(rpnEvalPlugin);
 registerPuzzle(sexprEvalPlugin);
+registerPuzzle(truthTablePlugin);
+registerPuzzle(binaryAddPlugin);

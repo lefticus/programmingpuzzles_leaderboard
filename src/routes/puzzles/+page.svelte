@@ -65,16 +65,28 @@
 		if (e.altKey || e.ctrlKey || e.metaKey) return;
 		const cards = [...document.querySelectorAll('.expr-card')] as HTMLElement[];
 		const idx = cards.indexOf(e.currentTarget as HTMLElement);
+		const cols = 2;
+		const row = Math.floor(idx / cols);
+		const col = idx % cols;
 
 		if (e.key === 'ArrowUp') {
 			e.preventDefault();
-			(document.querySelector('.mixed-card') as HTMLElement)?.focus();
-		} else if (e.key === 'ArrowLeft' && idx > 0) {
+			if (row === 0) {
+				(document.querySelector('.mixed-card') as HTMLElement)?.focus();
+			} else {
+				cards[idx - cols]?.focus();
+			}
+		} else if (e.key === 'ArrowDown') {
 			e.preventDefault();
-			cards[idx - 1].focus();
-		} else if (e.key === 'ArrowRight' && idx < cards.length - 1) {
+			if (idx + cols < cards.length) {
+				cards[idx + cols].focus();
+			}
+		} else if (e.key === 'ArrowLeft') {
 			e.preventDefault();
-			cards[idx + 1].focus();
+			if (col > 0) cards[idx - 1].focus();
+		} else if (e.key === 'ArrowRight') {
+			e.preventDefault();
+			if (col < cols - 1 && idx + 1 < cards.length) cards[idx + 1].focus();
 		}
 	}
 
@@ -192,8 +204,8 @@
 		<span class="mixed-desc">Random mix of binary, octal, decimal &amp; hex conversions</span>
 	</a>
 
-	<h2 class="section-header">Expression Puzzles</h2>
-	<p class="section-subtitle">Evaluate arithmetic expressions in different notations</p>
+	<h2 class="section-header">Computation Puzzles</h2>
+	<p class="section-subtitle">Evaluate expressions and perform binary arithmetic</p>
 
 	<div class="expr-grid">
 		<a href="{base}/puzzles/rpn-eval/" class="expr-card" onkeydown={handleExprKeydown}>
@@ -205,6 +217,16 @@
 			<span class="expr-title">S-Expression Evaluation</span>
 			<span class="expr-example mono">(* (+ 3 4) 2)</span>
 			<span class="expr-desc">Evaluate prefix S-expression notation expressions</span>
+		</a>
+		<a href="{base}/puzzles/truth-table/" class="expr-card" onkeydown={handleExprKeydown}>
+			<span class="expr-title">Truth Tables</span>
+			<span class="expr-example mono">A AND (B OR C)</span>
+			<span class="expr-desc">Evaluate boolean logic expressions with variable assignments</span>
+		</a>
+		<a href="{base}/puzzles/binary-add/" class="expr-card" onkeydown={handleExprKeydown}>
+			<span class="expr-title">Binary Addition</span>
+			<span class="expr-example mono">1011 + 0110</span>
+			<span class="expr-desc">Add two binary numbers and compute the sum in binary</span>
 		</a>
 	</div>
 </div>
