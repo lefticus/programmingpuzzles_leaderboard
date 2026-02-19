@@ -150,6 +150,10 @@
 			font-size: 1.4rem;
 		}
 
+		.answer-form {
+			flex-direction: column;
+		}
+
 		.answer-input {
 			font-size: 1rem;
 		}
