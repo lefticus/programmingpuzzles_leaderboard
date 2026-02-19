@@ -145,6 +145,7 @@
 				(document.querySelector('.game-controls .btn-primary') as HTMLElement)?.focus();
 			} else if (phase === 'done') {
 				(document.querySelector('.done-actions .btn-primary') as HTMLElement)?.focus();
+				submitScore();
 			}
 		});
 	});
@@ -216,6 +217,11 @@
 					<div class="mode-desc">No timer, no penalty. Practice at your own pace.</div>
 				</button>
 			</div>
+			{#if !auth.user}
+				<p class="guest-banner">
+					Playing as guest — scores won't be saved. <a href="{base}/login/">Sign in</a> to save scores to the leaderboard.
+				</p>
+			{/if}
 		</div>
 	{:else if gameState.phase === 'starting' || gameState.phase === 'playing' || gameState.phase === 'answered' || gameState.phase === 'level-up'}
 		<div class="game-layout" class:ref-open={gameState.referenceVisible}>
@@ -245,6 +251,11 @@
 						</button>
 					{/if}
 				</div>
+				{#if !auth.user}
+					<p class="guest-banner">
+						Playing as guest — scores won't be saved. <a href="{base}/login/">Sign in</a> to save scores to the leaderboard.
+					</p>
+				{/if}
 				{#if gameState.mode !== 'untimed' && gameState.phase !== 'starting'}
 					<Timer timer={gameState.timer} />
 				{/if}
@@ -313,25 +324,18 @@
 				</div>
 			</div>
 
-			{#if auth.user && !submitted}
-				<button
-					class="btn btn-primary"
-					onclick={submitScore}
-					disabled={submitting || gameState.score <= 0}
-				>
-					{submitting ? 'Submitting...' : 'Submit Score'}
-				</button>
-				{#if submitError}
+			{#if auth.user}
+				{#if submitting}
+					<p class="status-msg">Saving score...</p>
+				{:else if submitError}
 					<p class="error-text">{submitError}</p>
+				{:else if submitted}
+					<p class="success-text">Score saved!</p>
 				{/if}
-			{:else if !auth.user}
-				<p class="hint">
-					<a href="{base}/login/">Sign in</a> to submit your score to the leaderboard.
+			{:else}
+				<p class="guest-banner">
+					Playing as guest — scores won't be saved. <a href="{base}/login/">Sign in</a> to save scores to the leaderboard.
 				</p>
-			{/if}
-
-			{#if submitted}
-				<p class="success-text">Score submitted!</p>
 			{/if}
 
 			<div class="done-actions">
@@ -431,9 +435,14 @@
 		gap: 1.5rem;
 	}
 
-	.hint {
+	.guest-banner {
+		font-size: 0.85rem;
 		color: var(--text-muted);
-		font-size: 0.9rem;
+		background: var(--bg-elevated);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 0.6rem 1rem;
+		text-align: center;
 	}
 
 	.mode-picker {
