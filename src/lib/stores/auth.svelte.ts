@@ -47,13 +47,6 @@ class AuthState {
 		});
 	}
 
-	async signInWithOAuth(provider: 'github' | 'google') {
-		return supabase.auth.signInWithOAuth({
-			provider,
-			options: { redirectTo: window.location.origin }
-		});
-	}
-
 	async signOut() {
 		return supabase.auth.signOut();
 	}

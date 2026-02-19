@@ -13,7 +13,6 @@
 	import { explainExpression } from '$lib/puzzles/expression-engine';
 	import { explainBool } from '$lib/puzzles/bool-engine';
 	import { explainBinaryAdd } from '$lib/puzzles/binary-add-engine';
-	import BookPromo from './BookPromo.svelte';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 
@@ -344,8 +343,6 @@
 				</button>
 				<a href="{base}/puzzles/" class="btn btn-secondary" onkeydown={(e) => arrowNav(e, '.done-actions .btn')}>Back to Puzzles</a>
 			</div>
-
-			<BookPromo variant="compact" />
 
 			{#if submitted}
 				<div class="leaderboard-section">

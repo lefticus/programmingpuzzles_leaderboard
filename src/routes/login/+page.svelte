@@ -3,14 +3,14 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 
-	let method = $state<'magic' | 'password'>('magic');
-	let mode = $state<'signin' | 'signup'>('signin');
 	let email = $state('');
 	let password = $state('');
 	let displayName = $state('');
 	let error = $state('');
 	let loading = $state(false);
 	let magicLinkSent = $state(false);
+	let showPassword = $state(false);
+	let passwordMode = $state<'signin' | 'signup'>('signin');
 
 	async function handleMagicLink(e: Event) {
 		e.preventDefault();
@@ -35,7 +35,7 @@
 		loading = true;
 
 		try {
-			if (mode === 'signup') {
+			if (passwordMode === 'signup') {
 				const { error: err } = await auth.signUpWithEmail(email, password, displayName);
 				if (err) { error = err.message; return; }
 			} else {
@@ -46,11 +46,6 @@
 		} finally {
 			loading = false;
 		}
-	}
-
-	async function handleOAuth(provider: 'github' | 'google') {
-		const { error: err } = await auth.signInWithOAuth(provider);
-		if (err) error = err.message;
 	}
 </script>
 
@@ -71,40 +66,28 @@
 				Check your email for a sign-in link! You can close this page.
 			</div>
 		{:else}
-			<!-- Method toggle -->
-			<div class="method-toggle">
-				<button
-					class="method-btn"
-					class:active={method === 'magic'}
-					onclick={() => method = 'magic'}
-				>Email Link</button>
-				<button
-					class="method-btn"
-					class:active={method === 'password'}
-					onclick={() => method = 'password'}
-				>Password</button>
-			</div>
+			<form onsubmit={handleMagicLink}>
+				<label class="field">
+					<span>Email</span>
+					<input type="email" bind:value={email} required placeholder="you@example.com" />
+				</label>
 
-			{#if method === 'magic'}
-				<form onsubmit={handleMagicLink}>
-					<label class="field">
-						<span>Email</span>
-						<input type="email" bind:value={email} required placeholder="you@example.com" />
-					</label>
+				<button type="submit" class="btn btn-primary full-width" disabled={loading}>
+					{loading ? 'Sending...' : 'Send Sign-In Link'}
+				</button>
+			</form>
 
-					<button type="submit" class="btn btn-primary full-width" disabled={loading}>
-						{loading ? 'Sending...' : 'Send Sign-In Link'}
-					</button>
-				</form>
+			<p class="method-hint">We'll email you a link — no password needed.</p>
 
-				<p class="method-hint">We'll email you a link — no password needed.</p>
+			{#if !showPassword}
+				<p class="password-toggle">
+					Prefer a password? <button class="link-btn" onclick={() => showPassword = true}>Use email &amp; password</button>
+				</p>
 			{:else}
-				{#if mode === 'signup'}
-					<p class="method-hint">Create an account with email and password.</p>
-				{/if}
+				<div class="divider"><span>or use a password</span></div>
 
 				<form onsubmit={handlePassword}>
-					{#if mode === 'signup'}
+					{#if passwordMode === 'signup'}
 						<label class="field">
 							<span>Display Name</span>
 							<input type="text" bind:value={displayName} required placeholder="PlayerOne" />
@@ -121,30 +104,19 @@
 						<input type="password" bind:value={password} required minlength="6" placeholder="••••••••" />
 					</label>
 
-					<button type="submit" class="btn btn-primary full-width" disabled={loading}>
-						{loading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+					<button type="submit" class="btn btn-secondary full-width" disabled={loading}>
+						{loading ? 'Loading...' : passwordMode === 'signin' ? 'Sign In' : 'Create Account'}
 					</button>
 				</form>
 
 				<p class="toggle-mode">
-					{#if mode === 'signin'}
-						Don't have an account? <button class="link-btn" onclick={() => mode = 'signup'}>Sign up</button>
+					{#if passwordMode === 'signin'}
+						Don't have an account? <button class="link-btn" onclick={() => passwordMode = 'signup'}>Sign up</button>
 					{:else}
-						Already have an account? <button class="link-btn" onclick={() => mode = 'signin'}>Sign in</button>
+						Already have an account? <button class="link-btn" onclick={() => passwordMode = 'signin'}>Sign in</button>
 					{/if}
 				</p>
 			{/if}
-
-			<div class="divider"><span>or</span></div>
-
-			<div class="oauth-buttons">
-				<button class="btn btn-secondary full-width" onclick={() => handleOAuth('github')}>
-					Continue with GitHub
-				</button>
-				<button class="btn btn-secondary full-width" onclick={() => handleOAuth('google')}>
-					Continue with Google
-				</button>
-			</div>
 		{/if}
 	</div>
 </div>
@@ -166,36 +138,18 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.method-toggle {
-		display: flex;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		overflow: hidden;
-		margin-bottom: 1.25rem;
-	}
-
-	.method-btn {
-		flex: 1;
-		padding: 0.5rem;
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: var(--text-muted);
-		background: transparent;
-		border: none;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.method-btn.active {
-		background: var(--accent);
-		color: var(--bg);
-	}
-
 	.method-hint {
 		text-align: center;
 		color: var(--text-dim);
 		font-size: 0.8rem;
 		margin-top: 0.75rem;
+	}
+
+	.password-toggle {
+		text-align: center;
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		margin-top: 1.25rem;
 	}
 
 	.field {
@@ -241,12 +195,6 @@
 		content: '';
 		flex: 1;
 		border-top: 1px solid var(--border);
-	}
-
-	.oauth-buttons {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
 	}
 
 	.error-msg {
