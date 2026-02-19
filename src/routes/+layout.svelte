@@ -20,6 +20,9 @@
 			<AuthButton />
 		</div>
 	</nav>
+	<div class="test-banner">
+		This site is in testing — scores may be reset. <a href="https://github.com/lefticus/programmingpuzzles_leaderboard/issues" target="_blank" rel="noopener">Submit feedback or requests</a>
+	</div>
 	<main class="main-content">
 		{@render children()}
 	</main>
@@ -81,6 +84,21 @@
 	.nav-links a:hover {
 		color: var(--text);
 		text-decoration: none;
+	}
+
+	.test-banner {
+		background: #854d0e44;
+		border-bottom: 1px solid #854d0e;
+		color: #fbbf24;
+		text-align: center;
+		padding: 0.6rem 1rem;
+		font-size: 0.9rem;
+	}
+
+	.test-banner a {
+		color: #fde68a;
+		font-weight: 600;
+		text-decoration: underline;
 	}
 
 	.main-content {
