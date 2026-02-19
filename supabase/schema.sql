@@ -133,3 +133,18 @@ as $$
   order by l.score desc
   limit p_limit;
 $$;
+
+
+-- RPC: get top leaders (sum of best scores across all puzzle-mode combos)
+create or replace function public.get_top_leaders(p_limit integer default 10)
+returns table (rank bigint, display_name text, total_score bigint)
+language sql stable as $$
+  select
+    row_number() over (order by sum(l.score) desc) as rank,
+    l.display_name,
+    sum(l.score)::bigint as total_score
+  from public.leaderboard l
+  group by l.user_id, l.display_name
+  order by total_score desc
+  limit p_limit;
+$$;

@@ -2,7 +2,7 @@
 	import { supabase } from '$lib/supabase';
 	import { onMount } from 'svelte';
 
-	let { puzzleSlug = '', limit = 20 }: { puzzleSlug?: string; limit?: number } = $props();
+	let { puzzleSlug = '', limit = 20, title = 'Leaderboard' }: { puzzleSlug?: string; limit?: number; title?: string } = $props();
 
 	let entries = $state<Array<{
 		rank: number;
@@ -38,7 +38,7 @@
 </script>
 
 <div class="leaderboard">
-	<h3>Leaderboard</h3>
+	<h3>{title}</h3>
 
 	{#if loading}
 		<p class="loading-text">Loading...</p>
