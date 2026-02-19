@@ -625,4 +625,22 @@
 		width: 100%;
 		margin-top: 1rem;
 	}
+
+	@media (max-width: 600px) {
+		.game-area {
+			gap: 0.75rem;
+		}
+
+		.puzzle-area {
+			padding: 1rem;
+		}
+
+		.game-header {
+			margin-bottom: 0.75rem;
+		}
+
+		.game-header h2 {
+			font-size: 1.2rem;
+		}
+	}
 </style>

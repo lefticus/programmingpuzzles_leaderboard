@@ -99,4 +99,22 @@
 			0 0 8px rgba(251, 191, 36, 0.6),
 			0 0 20px rgba(251, 191, 36, 0.3);
 	}
+
+	@media (max-width: 600px) {
+		.score-display {
+			gap: 0.75rem;
+		}
+
+		.stat {
+			min-width: 55px;
+		}
+
+		.stat-value {
+			font-size: 1.1rem;
+		}
+
+		.strikes {
+			font-size: 1.1rem;
+		}
+	}
 </style>

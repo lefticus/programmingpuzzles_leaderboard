@@ -156,4 +156,23 @@
 		color: var(--text-muted);
 		font-size: 0.95rem;
 	}
+
+	@media (max-width: 600px) {
+		.conversion-puzzle {
+			gap: 0.75rem;
+		}
+
+		.binary-stack {
+			font-size: 1.4rem;
+		}
+
+		.answer-input {
+			font-size: 1rem;
+		}
+
+		.difficulty-badge {
+			font-size: 0.7rem;
+			padding: 0.2rem 0.6rem;
+		}
+	}
 </style>
