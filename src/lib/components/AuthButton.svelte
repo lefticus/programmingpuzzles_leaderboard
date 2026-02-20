@@ -13,7 +13,7 @@
 	{#if auth.loading}
 		<span class="loading">...</span>
 	{:else if auth.user}
-		<span class="user-name">{auth.displayName}</span>
+		<span class="user-name">{auth.profileDisplayName}</span>
 		<button class="btn btn-secondary btn-sm" onclick={handleSignOut}>Sign Out</button>
 	{:else}
 		<a href="{base}/login/" class="btn btn-primary btn-sm">Sign In</a>

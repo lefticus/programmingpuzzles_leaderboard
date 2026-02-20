@@ -13,6 +13,7 @@
 	import { explainExpression } from '$lib/puzzles/expression-engine';
 	import { explainBool } from '$lib/puzzles/bool-engine';
 	import { explainBinaryAdd } from '$lib/puzzles/binary-add-engine';
+	import DisplayNamePrompt from './DisplayNamePrompt.svelte';
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 
@@ -196,7 +197,9 @@
 		<h2>{plugin.name}</h2>
 	</div>
 
-	{#if gameState.phase === 'ready'}
+	{#if auth.user && !auth.nameChosen && gameState.phase === 'ready'}
+		<DisplayNamePrompt />
+	{:else if gameState.phase === 'ready'}
 		<div class="ready-screen">
 			<p>{plugin.description}</p>
 			<div class="mode-picker">

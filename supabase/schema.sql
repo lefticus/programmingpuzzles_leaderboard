@@ -2,9 +2,14 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text not null default 'Anonymous',
+  name_chosen boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Case-insensitive uniqueness on display names
+create unique index if not exists idx_profiles_display_name_lower
+  on public.profiles (lower(display_name));
 
 alter table public.profiles enable row level security;
 
@@ -20,16 +25,32 @@ returns trigger
 language plpgsql
 security definer set search_path = ''
 as $$
+declare
+  base_name text;
+  chosen boolean;
+  final_name text;
 begin
-  insert into public.profiles (id, display_name)
-  values (
-    new.id,
-    coalesce(
-      new.raw_user_meta_data ->> 'display_name',
-      new.raw_user_meta_data ->> 'full_name',
-      split_part(new.email, '@', 1)
-    )
+  base_name := coalesce(
+    new.raw_user_meta_data ->> 'display_name',
+    new.raw_user_meta_data ->> 'full_name',
+    split_part(new.email, '@', 1)
   );
+  -- If an explicit display_name was provided (password signup), mark as chosen
+  chosen := (new.raw_user_meta_data ->> 'display_name') is not null;
+  final_name := base_name;
+
+  -- Try inserting; on collision append random suffix
+  loop
+    begin
+      insert into public.profiles (id, display_name, name_chosen)
+      values (new.id, final_name, chosen);
+      exit; -- success
+    exception when unique_violation then
+      final_name := base_name || '_' || substr(md5(random()::text), 1, 4);
+      chosen := false; -- suffixed names should prompt the user to pick a new one
+    end;
+  end loop;
+
   return new;
 end;
 $$;
@@ -147,4 +168,37 @@ language sql stable as $$
   group by l.user_id, l.display_name
   order by total_score desc
   limit p_limit;
+$$;
+
+
+-- RPC: check if a display name is available (case-insensitive)
+create or replace function public.is_display_name_available(name text)
+returns boolean
+language sql
+stable
+security definer
+as $$
+  select not exists (
+    select 1 from public.profiles where lower(display_name) = lower(name)
+  );
+$$;
+
+
+-- RPC: update current user's display name and mark as chosen
+create or replace function public.update_display_name(new_name text)
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  if length(new_name) < 2 or length(new_name) > 20 then
+    raise exception 'Display name must be between 2 and 20 characters';
+  end if;
+
+  update public.profiles
+  set display_name = new_name,
+      name_chosen = true,
+      updated_at = now()
+  where id = auth.uid();
+end;
 $$;

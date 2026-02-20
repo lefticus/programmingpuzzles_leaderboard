@@ -11,6 +11,21 @@
 	let magicLinkSent = $state(false);
 	let showPassword = $state(false);
 	let passwordMode = $state<'signin' | 'signup'>('signin');
+	let nameStatus = $state<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+	let nameDebounce: ReturnType<typeof setTimeout>;
+
+	function handleNameInput() {
+		clearTimeout(nameDebounce);
+		if (displayName.length < 2 || displayName.length > 20) {
+			nameStatus = displayName.length > 0 ? 'invalid' : 'idle';
+			return;
+		}
+		nameStatus = 'checking';
+		nameDebounce = setTimeout(async () => {
+			const available = await auth.checkDisplayName(displayName);
+			nameStatus = available ? 'available' : 'taken';
+		}, 300);
+	}
 
 	async function handleMagicLink(e: Event) {
 		e.preventDefault();
@@ -32,6 +47,10 @@
 	async function handlePassword(e: Event) {
 		e.preventDefault();
 		error = '';
+		if (passwordMode === 'signup' && nameStatus !== 'available') {
+			error = 'Please choose an available display name.';
+			return;
+		}
 		loading = true;
 
 		try {
@@ -90,8 +109,17 @@
 					{#if passwordMode === 'signup'}
 						<label class="field">
 							<span>Display Name</span>
-							<input type="text" bind:value={displayName} required placeholder="PlayerOne" />
+							<input type="text" bind:value={displayName} oninput={handleNameInput} required minlength="2" maxlength="20" placeholder="PlayerOne" />
 						</label>
+						{#if nameStatus === 'checking'}
+							<p class="name-status checking">Checking...</p>
+						{:else if nameStatus === 'available'}
+							<p class="name-status available">Available</p>
+						{:else if nameStatus === 'taken'}
+							<p class="name-status taken">Taken</p>
+						{:else if nameStatus === 'invalid'}
+							<p class="name-status taken">Must be 2-20 characters</p>
+						{/if}
 					{/if}
 
 					<label class="field">
@@ -232,5 +260,24 @@
 
 	.link-btn:hover {
 		text-decoration: underline;
+	}
+
+	.name-status {
+		font-size: 0.8rem;
+		font-weight: 600;
+		margin-top: -0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.name-status.checking {
+		color: var(--text-dim);
+	}
+
+	.name-status.available {
+		color: var(--success, #4ade80);
+	}
+
+	.name-status.taken {
+		color: var(--error, #f87171);
 	}
 </style>
