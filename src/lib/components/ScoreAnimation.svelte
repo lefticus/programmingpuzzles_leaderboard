@@ -9,7 +9,6 @@
 		sub: string;
 		cls: string;
 		delay: number;
-		countdown?: { from: number; to: number; subFrom: number; duration: number };
 	}
 
 	const lines: AnimLine[] = $derived.by(() => {
@@ -30,17 +29,11 @@
 				result.push({
 					key: 'time',
 					text: `+${breakdown.timeBonus}`,
-					sub: `${Math.round(breakdown.timeRemaining * 10) / 10}s remaining`,
+					sub: `SPEED BONUS · ${Math.round(breakdown.timeRemaining * 10) / 10}s left`,
 					cls: 'line-time',
-					delay: d,
-					countdown: {
-						from: 0,
-						to: breakdown.timeBonus,
-						subFrom: Math.round(breakdown.timeRemaining * 10) / 10,
-						duration: 300
-					}
+					delay: d
 				});
-				d = 550;
+				d += 150;
 			}
 
 			if (breakdown.streakBonus > 0) {
@@ -94,54 +87,6 @@
 
 		return result;
 	});
-
-	// Countdown animation state for time bonus
-	let countdownText = $state('');
-	let countdownSub = $state('');
-	let countdownActive = $state(false);
-
-	$effect(() => {
-		const timeLine = lines.find((l) => l.countdown);
-		if (!timeLine?.countdown) {
-			countdownActive = false;
-			return;
-		}
-
-		const { from, to, subFrom, duration } = timeLine.countdown;
-		const lineDelay = timeLine.delay;
-		countdownActive = false;
-		countdownText = `+${from}`;
-		countdownSub = `${subFrom.toFixed(1)}s remaining`;
-
-		let rafId: number;
-		const timeoutId = setTimeout(() => {
-			countdownActive = true;
-			const startTime = performance.now();
-
-			function tick(now: number) {
-				const elapsed = now - startTime;
-				const t = Math.min(elapsed / duration, 1);
-				const currentPoints = Math.round(from + (to - from) * t);
-				const currentSeconds = subFrom - subFrom * t;
-				countdownText = `+${currentPoints}`;
-				countdownSub = `${currentSeconds.toFixed(1)}s remaining`;
-
-				if (t < 1) {
-					rafId = requestAnimationFrame(tick);
-				} else {
-					countdownText = `+${to}`;
-					countdownSub = `0.0s remaining`;
-				}
-			}
-
-			rafId = requestAnimationFrame(tick);
-		}, lineDelay);
-
-		return () => {
-			clearTimeout(timeoutId);
-			cancelAnimationFrame(rafId);
-		};
-	});
 </script>
 
 <div class="overlay" class:correct={breakdown.correct} class:wrong={!breakdown.correct}>
@@ -149,16 +94,9 @@
 	<div class="anim-stack">
 		{#each lines as line (line.key)}
 			<div class="anim-line {line.cls}" style="animation-delay: {line.delay}ms">
-				{#if line.countdown}
-					<span class="line-text">{countdownActive ? countdownText : line.text}</span>
-					<span class="line-sub"
-						>&nbsp;{countdownActive ? countdownSub : line.sub}</span
-					>
-				{:else}
-					<span class="line-text">{line.text}</span>
-					{#if line.sub}
-						<span class="line-sub">&nbsp;{line.sub}</span>
-					{/if}
+				<span class="line-text">{line.text}</span>
+				{#if line.sub}
+					<span class="line-sub">&nbsp;{line.sub}</span>
 				{/if}
 			</div>
 		{/each}
