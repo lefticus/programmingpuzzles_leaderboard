@@ -133,6 +133,7 @@ create or replace function public.get_leaderboard(
 )
 returns table (
   rank bigint,
+  user_id uuid,
   display_name text,
   score integer,
   max_difficulty integer,
@@ -144,6 +145,7 @@ stable
 as $$
   select
     row_number() over (order by l.score desc) as rank,
+    l.user_id,
     l.display_name,
     l.score,
     l.max_difficulty,

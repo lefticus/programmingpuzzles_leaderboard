@@ -15,9 +15,10 @@
 	import { explainBinaryAdd } from '$lib/puzzles/binary-add-engine';
 	import DisplayNamePrompt from './DisplayNamePrompt.svelte';
 	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { onDestroy, onMount } from 'svelte';
 
-	let { plugin }: { plugin: PuzzlePlugin } = $props();
+	let { plugin, initialMode }: { plugin: PuzzlePlugin; initialMode?: GameMode } = $props();
 
 	const gameState = new GameState(() => plugin);
 	const refVariant = $derived(plugin.slug.includes('ascii') ? 'ascii' : 'numeric' as const);
@@ -28,6 +29,7 @@
 	let submitting = $state(false);
 	let submitted = $state(false);
 	let submitError = $state('');
+	let playerRank = $state<number | null>(null);
 	let puzzleAreaEl = $state<HTMLDivElement | null>(null);
 	let puzzleAreaMinHeight = $state(0);
 
@@ -83,7 +85,7 @@
 				gameState.nextRound();
 			} else if (e.key === 'Backspace') {
 				e.preventDefault();
-				gameState.phase = 'ready';
+				navigateToModePicker();
 			} else if (e.key === 'r') {
 				gameState.toggleReference();
 			}
@@ -97,9 +99,9 @@
 
 		// Mode selection: 1/2/3 on ready screen, Backspace to go back
 		if (gameState.phase === 'ready') {
-			if (e.key === '1') startWithMode('sprint');
-			else if (e.key === '2') startWithMode('marathon');
-			else if (e.key === '3') startWithMode('untimed');
+			if (e.key === '1') navigateToMode('sprint');
+			else if (e.key === '2') navigateToMode('marathon');
+			else if (e.key === '3') navigateToMode('untimed');
 			else if (e.key === 'Backspace') {
 				e.preventDefault();
 				window.history.back();
@@ -111,14 +113,17 @@
 			gameState.toggleReference();
 		}
 
-		// End game: Escape
+		// End game: Escape — go back to mode picker
 		if (e.key === 'Escape' && gameState.phase !== 'ready' && gameState.phase !== 'done') {
-			gameState.endGame();
+			navigateToModePicker();
 		}
 	}
 
 	onMount(() => {
 		window.addEventListener('keydown', handleKeydown);
+		if (initialMode) {
+			startWithMode(initialMode);
+		}
 	});
 
 	onDestroy(() => {
@@ -168,11 +173,34 @@
 			submitError = error.message;
 		} else {
 			submitted = true;
+			await fetchPlayerRank();
 		}
+	}
+
+	async function fetchPlayerRank() {
+		const slug = `${plugin.slug}-${gameState.mode}`;
+		const { count, error } = await supabase
+			.from('leaderboard')
+			.select('*', { count: 'exact', head: true })
+			.eq('puzzle_slug', slug)
+			.gte('score', gameState.score);
+
+		if (!error && count !== null) {
+			playerRank = count;
+		}
+	}
+
+	function navigateToMode(mode: GameMode) {
+		goto(`${base}/puzzles/${plugin.slug}/${mode}/`);
+	}
+
+	function navigateToModePicker() {
+		goto(`${base}/puzzles/${plugin.slug}/`);
 	}
 
 	function startWithMode(mode: GameMode) {
 		submitted = false;
+		playerRank = null;
 		puzzleAreaMinHeight = 0;
 		gameState.startGame(mode);
 	}
@@ -203,17 +231,17 @@
 		<div class="ready-screen">
 			<p>{plugin.description}</p>
 			<div class="mode-picker">
-				<button class="mode-card card" onclick={() => startWithMode('sprint')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
+				<button class="mode-card card" onclick={() => navigateToMode('sprint')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
 					<kbd class="kbd-hint">1</kbd>
 					<div class="mode-name">Sprint</div>
 					<div class="mode-desc">3 wrong in a row and you're out. High risk, high reward.</div>
 				</button>
-				<button class="mode-card card" onclick={() => startWithMode('marathon')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
+				<button class="mode-card card" onclick={() => navigateToMode('marathon')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
 					<kbd class="kbd-hint">2</kbd>
 					<div class="mode-name">Marathon</div>
 					<div class="mode-desc">No game over. Wrong answers deduct points. End when you want.</div>
 				</button>
-				<button class="mode-card card" onclick={() => startWithMode('untimed')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
+				<button class="mode-card card" onclick={() => navigateToMode('untimed')} onkeydown={(e) => arrowNav(e, '.mode-card')}>
 					<kbd class="kbd-hint">3</kbd>
 					<div class="mode-name">Untimed</div>
 					<div class="mode-desc">No timer, no penalty. Practice at your own pace.</div>
@@ -270,6 +298,9 @@
 							</button>
 							<div class="starting-hint">Press Enter to start</div>
 						</div>
+						<div class="starting-leaderboard">
+							<Leaderboard puzzleSlug="{plugin.slug}-{gameState.mode}" limit={5} title="Top 5" />
+						</div>
 					{:else}
 						<PuzzleComponent {gameState} />
 						{#if gameState.phase === 'answered' && gameState.lastBreakdown}
@@ -289,7 +320,7 @@
 								{gameState.phase === 'level-up' ? 'Continue' : 'Next Round'}
 							</button>
 						{/if}
-						<button class="btn btn-danger" onclick={() => gameState.endGame()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
+						<button class="btn btn-danger" onclick={() => navigateToModePicker()} onkeydown={(e) => arrowNav(e, '.game-controls .btn')}>
 							End Game
 						</button>
 					</div>
@@ -341,17 +372,18 @@
 			{/if}
 
 			<div class="done-actions">
-				<button class="btn btn-primary" onclick={() => { gameState.phase = 'ready'; }} onkeydown={(e) => arrowNav(e, '.done-actions .btn')}>
+				<button class="btn btn-primary" onclick={() => navigateToModePicker()} onkeydown={(e) => arrowNav(e, '.done-actions .btn')}>
 					Play Again
 				</button>
 				<a href="{base}/puzzles/" class="btn btn-secondary" onkeydown={(e) => arrowNav(e, '.done-actions .btn')}>Back to Puzzles</a>
 			</div>
 
-			{#if submitted}
-				<div class="leaderboard-section">
-					<Leaderboard puzzleSlug="{plugin.slug}-{gameState.mode}" />
-				</div>
-			{/if}
+			<div class="leaderboard-section">
+				{#if playerRank !== null}
+					<p class="rank-text">You placed <strong>#{playerRank}</strong>!</p>
+				{/if}
+				<Leaderboard puzzleSlug="{plugin.slug}-{gameState.mode}" highlightUserId={auth.user?.id ?? ''} />
+			</div>
 		</div>
 	{/if}
 </div>
@@ -626,6 +658,16 @@
 
 	.leaderboard-section {
 		width: 100%;
+		margin-top: 1rem;
+	}
+
+	.rank-text {
+		font-size: 1.1rem;
+		color: var(--accent);
+		margin-bottom: 0.5rem;
+	}
+
+	.starting-leaderboard {
 		margin-top: 1rem;
 	}
 

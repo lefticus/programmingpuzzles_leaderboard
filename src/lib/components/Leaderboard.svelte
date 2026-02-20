@@ -2,10 +2,11 @@
 	import { supabase } from '$lib/supabase';
 	import { onMount } from 'svelte';
 
-	let { puzzleSlug = '', limit = 20, title = 'Leaderboard' }: { puzzleSlug?: string; limit?: number; title?: string } = $props();
+	let { puzzleSlug = '', limit = 20, title = 'Leaderboard', highlightUserId = '' }: { puzzleSlug?: string; limit?: number; title?: string; highlightUserId?: string } = $props();
 
 	let entries = $state<Array<{
 		rank: number;
+		user_id: string;
 		display_name: string;
 		score: number;
 		max_difficulty: number;
@@ -59,7 +60,7 @@
 			</thead>
 			<tbody>
 				{#each entries as entry}
-					<tr>
+					<tr class:highlight={highlightUserId && entry.user_id === highlightUserId}>
 						<td class="rank-col mono">{entry.rank}</td>
 						<td>{entry.display_name}</td>
 						<td class="num-col mono">{entry.score.toLocaleString()}</td>
@@ -115,6 +116,15 @@
 
 	tr:hover td {
 		background: var(--bg-elevated);
+	}
+
+	tr.highlight td {
+		background: rgba(34, 211, 238, 0.08);
+		border-left: 3px solid var(--accent);
+	}
+
+	tr.highlight:first-child td {
+		border-left: 3px solid var(--accent);
 	}
 
 	.loading-text, .error-text, .empty-text {
